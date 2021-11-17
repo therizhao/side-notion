@@ -1,24 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import styled from 'styled-components';
+import Editor from './editor';
+
+const Container = styled.div`
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  justify-content: space-between;
+
+  .left {
+    width: 50%;
+
+    .video {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .right {
+    width: 50%;
+  }
+`;
+
+const Youtube = () => (
+  <iframe
+    title="Youtube"
+    src="https://www.youtube.com/embed/A03oI0znAoc?enablejsapi=1"
+    className="video"
+    scrolling="no"
+    style={{ overflow: 'hidden' }}
+  />
+);
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p> 
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container>
+      <div className="left">
+        <Youtube />
+      </div>
+      <div className="right">
+        <Editor />
+      </div>
+    </Container>
   );
 }
 
