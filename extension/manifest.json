@@ -1,0 +1,35 @@
+{
+  "description": "Turn Notion into your online lecture sidekick.",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
+    },
+    {
+      "js": ["youtube.js"],
+      "matches": ["http://www.youtube.com/*", "https://www.youtube.com/*"],
+      "all_frames": true
+    }
+  ],
+  "name": "SideNotion",
+  "permissions": [
+    "activeTab",
+    "cookies",
+    "tabs",
+    "webRequest",
+    "tabCapture",
+    "storage",
+    "http://*/*.m3u8",
+    "https://*/*.m3u8",
+    "http://*/*.mp4",
+    "https://*/*.mp4",
+    "https://*.slid.cc/"
+  ],
+  "short_name": "SideNotion",
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "version": "1.4.12"
+}
