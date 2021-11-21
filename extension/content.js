@@ -1,20 +1,3 @@
-// /**
-//  *
-//  * @param {string} scriptName
-//  */
-// const requireScript = (scriptName) => {
-//   const script = document.createElement('script');
-//   script.setAttribute('type', 'module');
-//   script.setAttribute('src', chrome.extension.getURL(scriptName));
-//   const head =
-//     document.head ||
-//     document.getElementsByTagName('head')[0] ||
-//     document.documentElement;
-//   head.insertBefore(script, head.lastChild);
-// };
-
-// requireScript('packages/html2canvas.min.js')
-
 /** @returns {HTMLHtmlElement} */
 const getHtmlElement = () => {
   const html = document.documentElement.outerHTML;
@@ -132,22 +115,23 @@ const addCustomStyles = (cssRules) => {
   document.head.appendChild(createStylesElement(cssRules));
 };
 
+const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
 /**
  *
  * @param {(dataURI: string) => void} callback
  */
 const takeScreenshot = (callback) => {
-  // Send signal to take screenshot
-  chrome.runtime.sendMessage(
-    {
-      takeScreenshot: true,
-      player: 'youtube',
-    },
-    (response) => {
-      console.log(response);
-      callback(response);
-    }
-  );
+  chrome.runtime.sendMessage({ action: TAKE_SCREENSHOT }, (response) => {
+    callback(response);
+  });
+};
+
+/**
+ *
+ * @param {string} dataURI
+ */
+const pasteToNotion = (dataURI) => {
+  // https://stackoverflow.com/questions/22702446/how-to-get-clipboard-data-in-chrome-extension
 };
 
 /**
@@ -158,7 +142,7 @@ const handleKeyDown = (event) => {
   // cmd + shift + .
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === '.') {
     takeScreenshot((dataURI) => {
-      console.log(dataURI);
+      pasteToNotion(dataURI);
     });
   }
 };

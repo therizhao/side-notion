@@ -23,11 +23,8 @@
     "webRequest",
     "tabCapture",
     "storage",
-    "http://*/*.m3u8",
-    "https://*/*.m3u8",
-    "http://*/*.mp4",
-    "https://*/*.mp4",
-    "https://*.slid.cc/"
+    "clipboardWrite",
+    "clipboardRead"
   ],
   "short_name": "SideNotion",
   "update_url": "https://clients2.google.com/service/update2/crx",

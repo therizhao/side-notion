@@ -25,9 +25,20 @@ const takeScreenshot = () => {
   return dataURI;
 };
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log(request, sender);
-  const dataURI = takeScreenshot();
-  sendResponse(dataURI);
-  return true;
+const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
+const NOTION_URL = 'https://www.notion.so';
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Only allow notion to send request to us
+  if (message.sender.origin !== NOTION_URL) {
+    return;
+  }
+
+  switch (message.request.action) {
+    case TAKE_SCREENSHOT:
+      sendResponse(takeScreenshot());
+      break;
+    default:
+      break;
+  }
 });
