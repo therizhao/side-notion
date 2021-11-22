@@ -126,12 +126,102 @@ const takeScreenshot = (callback) => {
   });
 };
 
+// const fallbackCopyTextToClipboard = (text) => {
+//   const textArea = document.createElement('textarea');
+//   textArea.value = text;
+
+//   // Avoid scrolling to bottom
+//   textArea.style.top = '0';
+//   textArea.style.left = '0';
+//   textArea.style.position = 'fixed';
+
+//   document.body.appendChild(textArea);
+//   textArea.focus();
+//   textArea.select();
+
+//   try {
+//     const successful = document.execCommand('copy');
+//     const msg = successful ? 'successful' : 'unsuccessful';
+//     console.log('Fallback: Copying text command was ' + msg);
+//   } catch (err) {
+//     console.error('Fallback: Oops, unable to copy', err);
+//   }
+
+//   document.body.removeChild(textArea);
+// };
+
 /**
  *
  * @param {string} dataURI
+ * @returns {Blob}
  */
-const pasteToNotion = (dataURI) => {
-  // https://stackoverflow.com/questions/22702446/how-to-get-clipboard-data-in-chrome-extension
+const dataURItoBlob = (dataURI) => {
+  // convert base64 to raw binary data held in a string
+  // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+  let byteString = atob(dataURI.split(',')[1]);
+
+  // separate out the mime component
+  let mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+  // write the bytes of the string to an ArrayBuffer
+  let ab = new ArrayBuffer(byteString.length);
+
+  // create a view into the buffer
+  let ia = new Uint8Array(ab);
+
+  // set the bytes of the buffer to the correct values
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+
+  // write the ArrayBuffer to a blob, and you're done
+  let blob = new Blob([ab], { type: mimeString });
+  return blob;
+};
+
+/**
+ *
+ * @param {Blob} blob
+ * @returns {Promise<void>}
+ */
+const copyBlobToClipboard = async (blob) => {
+  // if (!navigator.clipboard) {
+  //   fallbackCopyTextToClipboard(text);
+  //   return;
+  // }
+
+  return await navigator.clipboard.write([
+    new ClipboardItem({
+      [blob.type]: blob,
+    }),
+  ]);
+};
+
+const scrollToBottomNotion = () => {
+  const notionScroller = document.querySelector(
+    'div.notion-scroller.vertical.horizontal'
+  );
+  notionScroller.scrollTo(0, notionScroller.scrollHeight);
+};
+
+const pasteFromClipboardToNotion = () => {
+  const targetElement = document.querySelector('[contenteditable="false"');
+  targetElement.contentEditable = true;
+  targetElement.focus();
+  document.execCommand('Paste', null, null);
+};
+
+/**
+ * Pastes blob to notion
+ *
+ * @param {Blob} blob
+ *
+ * Reference: https://newbedev.com/why-is-document-execcommand-paste-not-working-in-google-chrome
+ */
+const pasteToNotion = async (blob) => {
+  await copyBlobToClipboard(blob);
+  pasteFromClipboardToNotion();
+  scrollToBottomNotion();
 };
 
 /**
@@ -142,7 +232,8 @@ const handleKeyDown = (event) => {
   // cmd + shift + .
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === '.') {
     takeScreenshot((dataURI) => {
-      pasteToNotion(dataURI);
+      const imageBlob = dataURItoBlob(dataURI);
+      pasteToNotion(imageBlob);
     });
   }
 };

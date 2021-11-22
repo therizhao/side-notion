@@ -21,7 +21,7 @@ const takeScreenshot = () => {
 
   ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
-  const dataURI = canvasElement.toDataURL('image/jpeg');
+  const dataURI = canvasElement.toDataURL('image/png');
   return dataURI;
 };
 
