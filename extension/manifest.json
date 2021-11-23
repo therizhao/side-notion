@@ -24,7 +24,8 @@
     "tabCapture",
     "storage",
     "clipboardWrite",
-    "clipboardRead"
+    "clipboardRead",
+    "desktopCapture"
   ],
   "short_name": "SideNotion",
   "update_url": "https://clients2.google.com/service/update2/crx",

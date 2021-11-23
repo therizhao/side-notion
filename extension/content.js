@@ -1,3 +1,7 @@
+// Actions
+const TAKE_SCREEN_RECORDING = 'TAKE_SCREEN_RECORDING';
+const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
+
 /** @returns {HTMLHtmlElement} */
 const getHtmlElement = () => {
   const html = document.documentElement.outerHTML;
@@ -115,7 +119,6 @@ const addCustomStyles = (cssRules) => {
   document.head.appendChild(createStylesElement(cssRules));
 };
 
-const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
 /**
  *
  * @param {(dataURI: string) => void} callback
@@ -225,6 +228,78 @@ const pasteToNotion = async (blob) => {
 };
 
 /**
+ * @property {MediaRecorder} recorder
+ * @property {MediaStream} stream
+ */
+class ScreenRecorder {
+  constructor() {
+    this.isStartRecording = false;
+    this.recorder = null;
+    this.stream = null;
+    this.objectURL = '';
+  }
+
+  startRecording(callback) {
+    window.alert('Recoding in process');
+    this.isStartRecording = true;
+    // Start recording
+    chrome.runtime.sendMessage(
+      { action: TAKE_SCREEN_RECORDING },
+      (response) => {
+        console.log('response', response);
+        if (response && response.type === 'success') {
+          navigator.mediaDevices
+            .getUserMedia({
+              video: {
+                mandatory: {
+                  chromeMediaSource: 'desktop',
+                  chromeMediaSourceId: response.streamId,
+                },
+              },
+            })
+            .then((stream) => {
+              this.stream = stream;
+              this.recorder = new MediaRecorder(stream);
+            });
+          return;
+        }
+
+        console.error('Could not get stream');
+      }
+    );
+  }
+
+  /**
+   *
+   * @param {(blob: Blob) => void} callback
+   */
+  endRecording(callback) {
+    window.alert('Recoding stopped');
+    if (!this.isStartRecording || !this.recorder || !this.stream) {
+      console.error('End stream failed');
+      return;
+    }
+
+    console.log(this.recorder);
+    const chunks = [];
+    this.recorder.ondataavailable((ev) => chunks.push(ev.data));
+    this.recorder.onstop((ev) => {
+      this.stream.stop();
+      const blob = new Blob(chunks, { type: chunks[0].type });
+      callback(blob);
+    });
+    this.recorder.stop();
+
+    // this.stream.stop();
+    // console.log(this.objectURL)
+    // console.log(this.stream);
+    // this.isStartRecording = false;
+  }
+}
+
+const screenRecorder = new ScreenRecorder();
+
+/**
  *
  * @param {KeyboardEvent} event
  */
@@ -235,6 +310,19 @@ const handleKeyDown = (event) => {
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
     });
+    return;
+  }
+
+  // cmd + shift + ,
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
+    if (screenRecorder.isStartRecording) {
+      screenRecorder.endRecording((videoBlob) => {
+        pasteToNotion(videoBlob);
+      });
+      return;
+    }
+
+    screenRecorder.startRecording();
   }
 };
 
