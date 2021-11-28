@@ -47,7 +47,6 @@ class ScreenRecorder {
   }
 
   startRecording() {
-    console.log('youtube, recording start');
     this.isStartRecording = true;
 
     // Start recording
@@ -61,12 +60,12 @@ class ScreenRecorder {
     const mediaStream = new MediaStream(this.canvasElement.captureStream(60)); // 60 fps
     console.log('mediaStream', mediaStream);
     this.recorder = new MediaRecorder(mediaStream, {
-      mimeType: 'video/webm',
+      mimeType: 'video/webm; codecs=vp9',
     });
+
     this.recorder.start(16);
-    console.log('recorder', this.recorder);
     this.recorder.ondataavailable = (ev) => {
-      console.log('chunk', ev);
+      console.log('new chunk', ev);
       this.chunks.push(ev.data);
     };
     this.recorder.onstop = () => {
@@ -99,21 +98,14 @@ class ScreenRecorder {
    * @returns {Blob} screen recording blob
    */
   endRecording() {
-    // console.log(this.chunks, this.recorder, this.startRecording);
-    // if (this.chunks.length <= 0 || !this.recorder || !this.startRecording) {
-    //   return null;
-    // }
+    if (this.chunks.length <= 0 || !this.recorder || !this.isStartRecording) {
+      throw new Error('No video chunks to output');
+    }
 
-    console.log('chunksss', this.chunks);
     this.isStartRecording = false;
     this.recorder.stop();
-    const blob = new Blob(this.chunks, { type: this.chunks[0].type });
+    const blob = new Blob(this.chunks, { type: 'video/webm' });
     return blob;
-
-    // const dataURI = this.canvasElement.toDataURL('video/webm');
-    // this.canvasElement = null;
-    // console.log('dataURI', dataURI);
-    // return dataURI;
   }
 }
 
@@ -133,7 +125,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  console.log(message.request);
   switch (message.request.action) {
     case TAKE_SCREENSHOT:
       sendResponse(takeScreenshot());
@@ -143,11 +134,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse('Recording started');
       break;
     case END_SCREEN_RECORDING:
-      console.log('END RECORDING');
       const blob = screenRecorder.endRecording();
       blobToDataURL(blob, sendResponse);
       break;
     default:
       break;
   }
+
+  return true;
 });

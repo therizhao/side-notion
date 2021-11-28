@@ -161,15 +161,39 @@ const dataURItoBlob = (dataURI) => {
 
 /**
  *
+ * @param {string} dataurl
+ * @param {string} filename
+ * @returns
+ */
+function dataURLtoFile(dataurl, filename) {
+  var arr = dataurl.split(','),
+    mime = arr[0].match(/:(.*?);/)[1],
+    bstr = atob(arr[1]),
+    n = bstr.length,
+    u8arr = new Uint8Array(n);
+
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+
+  return new File([u8arr], filename, { type: mime });
+}
+
+/**
+ *
  * @param {Blob} blob
  * @returns {Promise<void>}
  */
 const copyBlobToClipboard = async (blob) => {
-  console.log('our blob to copy', blob);
-  const clipboardItem = new ClipboardItem({
-    [blob.type]: blob,
-  });
-  return await navigator.clipboard.write([clipboardItem]);
+  try {
+    const clipboardItem = new ClipboardItem({
+      [blob.type]: blob,
+    });
+    return await navigator.clipboard.write([clipboardItem]);
+  } catch (error) {
+    console.log('error', error);
+    return null;
+  }
 };
 
 const scrollToBottomNotion = () => {
@@ -197,6 +221,84 @@ const pasteToNotion = async (blob) => {
   await copyBlobToClipboard(blob);
   pasteFromClipboardToNotion();
   scrollToBottomNotion();
+};
+
+function simulateDragDrop(sourceNode, destinationNode, file) {
+  let EVENT_TYPES = {
+    DRAG_END: 'dragend',
+    DRAG_START: 'dragstart',
+    DROP: 'drop',
+  };
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+
+  function createCustomEvent(type) {
+    let event = new DragEvent(type, { dataTransfer });
+    event.dataTransfer = dataTransfer;
+    return event;
+  }
+
+  function dispatchEvent(node, type, event) {
+    if (node.dispatchEvent) {
+      return node.dispatchEvent(event);
+    }
+    if (node.fireEvent) {
+      return node.fireEvent('on' + type, event);
+    }
+  }
+
+  let event = createCustomEvent(EVENT_TYPES.DRAG_START);
+  dispatchEvent(sourceNode, EVENT_TYPES.DRAG_START, event);
+
+  let dropEvent = createCustomEvent(EVENT_TYPES.DROP);
+  dropEvent.dataTransfer = event.dataTransfer;
+  dispatchEvent(destinationNode, EVENT_TYPES.DROP, dropEvent);
+
+  let dragEndEvent = createCustomEvent(EVENT_TYPES.DRAG_END);
+  dragEndEvent.dataTransfer = event.dataTransfer;
+  dispatchEvent(sourceNode, EVENT_TYPES.DRAG_END, dragEndEvent);
+}
+
+const dropToNotion = async (file) => {
+  const firstBlock = document.querySelector(
+    'div.notion-page-content > div:first-child'
+  );
+  const lastBlock = document.querySelector(
+    'div.notion-page-content > div:last-child'
+  );
+  firstBlock.addEventListener('drop', console.log);
+  firstBlock.addEventListener('dragstart', console.log);
+  firstBlock.addEventListener('dragend', console.log);
+  lastBlock.addEventListener('drop', console.log);
+  lastBlock.addEventListener('dragstart', console.log);
+  lastBlock.addEventListener('dragend', console.log);
+  simulateDragDrop(firstBlock, lastBlock, file);
+};
+
+const tempPasteExp = async () => {
+  const url = 'https://www.youtube.com/watch?v=A03oI0znAoc';
+  const text = new Blob([url], { type: 'text/plain' });
+  const clipboardItem = new ClipboardItem({
+    'text/plain': text,
+  });
+  await navigator.clipboard.write([clipboardItem]);
+  pasteFromClipboardToNotion();
+  scrollToBottomNotion();
+
+  // Poll recursively for Embed Video button to appear
+  const clicker = () => {
+    const elem = document.querySelector(
+      '.notion-embed-menu div[role="button"]:nth-child(2)'
+    );
+    if (elem) {
+      elem.click();
+      return;
+    }
+
+    setTimeout(clicker, 100);
+  };
+
+  clicker();
 };
 
 class ScreenRecorder {
@@ -248,20 +350,41 @@ const handleKeyDown = (event) => {
   }
 
   // cmd + shift + ,
-  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
-    if (screenRecorder.isStartRecording) {
-      screenRecorder.endRecording((dataURI) => {
-        const videoBlob = dataURItoBlob(dataURI);
-        pasteToNotion(videoBlob);
-      });
-      return;
-    }
+  // if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
+  //   if (screenRecorder.isStartRecording) {
+  //     screenRecorder.endRecording((dataURI) => {
+  //       tempPasteExp();
+  //       // const videoBlob = dataURLtoFile(dataURI);
+  //       // dropToNotion(videoBlob);
+  //     });
+  //     return;
+  //   }
 
-    screenRecorder.startRecording();
-  }
+  //   screenRecorder.startRecording();
+  // }
 };
 
-const main = () => {
+function getAllStorageLocalData() {
+  // Immediately return a promise and start asynchronous work
+  return new Promise((resolve, reject) => {
+    // Asynchronously fetch all data from storage.sync.
+    chrome.storage.local.get(null, (items) => {
+      // Pass any observed errors down the promise chain.
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+      // Pass the data retrieved from storage down the promise chain.
+      resolve(items);
+    });
+  });
+}
+
+const main = async () => {
+  const localData = await getAllStorageLocalData();
+  if (!localData.videoURL) {
+    return;
+  }
+
   addCustomStyles(`
     body {
         display: grid; 
@@ -276,10 +399,7 @@ const main = () => {
         width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
     }
   `);
-
-  const videoWrapper = createVideoWrapper(
-    'https://www.youtube.com/watch?v=A03oI0znAoc'
-  );
+  const videoWrapper = createVideoWrapper(localData.videoURL);
   const notionWrapper = createNotionWrapper();
 
   // Create new body
@@ -291,8 +411,10 @@ const main = () => {
   getBodyElement().remove();
   // Add new body
   document.documentElement.appendChild(newBody);
-
   document.documentElement.addEventListener('keydown', handleKeyDown);
+
+  // Reset video url
+  chrome.storage.local.clear();
 };
 
 main();
