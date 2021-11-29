@@ -20,11 +20,22 @@ const getBodyElement = () => {
  * @param {string} url
  * @returns {string}
  */
-const getYoutubeID = (url) => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
+const getYoutubeIFrameURL = (url) => {
+  /**
+   *
+   * @param {string} url
+   * @returns {string}
+   */
+  const getYoutubeID = (url) => {
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
 
-  return match && match[2].length === 11 ? match[2] : null;
+    return match && match[2].length === 11 ? match[2] : null;
+  };
+
+  const id = getYoutubeID(url);
+  return `https://www.youtube.com/embed/${id}`;
 };
 
 /**
@@ -32,23 +43,29 @@ const getYoutubeID = (url) => {
  * @param {string} url
  * @returns {string}
  */
-const getYoutubeIFrameURL = (url) => {
-  const id = getYoutubeID(url);
-  return `https://www.youtube.com/embed/${id}`;
+const getVimeoIFrameURL = (url) => {
+  const regExp =
+    /^.*(vimeo\.com\/)((channels\/[A-z]+\/)|(groups\/[A-z]+\/videos\/))?([0-9]+)/;
+  const parseUrl = regExp.exec(url);
+  const videoID = parseUrl[5];
+
+  return `https://player.vimeo.com/video/${videoID}`;
 };
 
 /**
  *
- * @param {string} videoUrl
+ * @param {string} iframeURL
  * @returns {HTMLIFrameElement}
  */
-const createYoutubeIFrame = (videoUrl) => {
-  const youtubeIFrame = document.createElement('iframe');
-  youtubeIFrame.title = 'SideNotion Video';
-  youtubeIFrame.src = getYoutubeIFrameURL(videoUrl);
-  youtubeIFrame.style.width = '50vw';
-  youtubeIFrame.style.height = '100vh';
-  return youtubeIFrame;
+const createVideoIFrame = (iframeURL) => {
+  const videoIFrame = document.createElement('iframe');
+  videoIFrame.title = 'SideNotion Video';
+  // Put src = sidenotion for screencapture.js to identify
+  videoIFrame.src = `${iframeURL}?src=sidenotion`;
+  videoIFrame.style.width = '50vw';
+  videoIFrame.style.height = '100vh';
+  videoIFrame.style.background = 'black';
+  return videoIFrame;
 };
 
 /**
@@ -58,7 +75,6 @@ const createYoutubeIFrame = (videoUrl) => {
  */
 const createVideoElement = (videoUrl) => {
   const videoElement = document.createElement('video');
-  wrapper.appendChild(videoElement);
   videoElement.src = videoUrl;
   return videoElement;
 };
@@ -70,7 +86,11 @@ const createVideoElement = (videoUrl) => {
  */
 const createVideoComponent = (videoUrl) => {
   if (videoUrl.includes('youtube')) {
-    return createYoutubeIFrame(videoUrl);
+    return createVideoIFrame(getYoutubeIFrameURL(videoUrl));
+  }
+
+  if (videoUrl.includes('vimeo')) {
+    return createVideoIFrame(getVimeoIFrameURL(videoUrl));
   }
 
   return createVideoElement(videoUrl);
@@ -275,65 +295,65 @@ const dropToNotion = async (file) => {
   simulateDragDrop(firstBlock, lastBlock, file);
 };
 
-const tempPasteExp = async () => {
-  const url = 'https://www.youtube.com/watch?v=A03oI0znAoc';
-  const text = new Blob([url], { type: 'text/plain' });
-  const clipboardItem = new ClipboardItem({
-    'text/plain': text,
-  });
-  await navigator.clipboard.write([clipboardItem]);
-  pasteFromClipboardToNotion();
-  scrollToBottomNotion();
+// const tempPasteExp = async () => {
+//   const url = 'https://www.youtube.com/watch?v=A03oI0znAoc';
+//   const text = new Blob([url], { type: 'text/plain' });
+//   const clipboardItem = new ClipboardItem({
+//     'text/plain': text,
+//   });
+//   await navigator.clipboard.write([clipboardItem]);
+//   pasteFromClipboardToNotion();
+//   scrollToBottomNotion();
 
-  // Poll recursively for Embed Video button to appear
-  const clicker = () => {
-    const elem = document.querySelector(
-      '.notion-embed-menu div[role="button"]:nth-child(2)'
-    );
-    if (elem) {
-      elem.click();
-      return;
-    }
+//   // Poll recursively for Embed Video button to appear
+//   const clicker = () => {
+//     const elem = document.querySelector(
+//       '.notion-embed-menu div[role="button"]:nth-child(2)'
+//     );
+//     if (elem) {
+//       elem.click();
+//       return;
+//     }
 
-    setTimeout(clicker, 100);
-  };
+//     setTimeout(clicker, 100);
+//   };
 
-  clicker();
-};
+//   clicker();
+// };
 
-class ScreenRecorder {
-  constructor() {
-    this.isStartRecording = false;
-  }
+// class ScreenRecorder {
+//   constructor() {
+//     this.isStartRecording = false;
+//   }
 
-  startRecording() {
-    window.alert('Recording in process');
-    this.isStartRecording = true;
+//   startRecording() {
+//     window.alert('Recording in process');
+//     this.isStartRecording = true;
 
-    // Start recording
-    const videoElement = document.querySelector('video');
-    chrome.runtime.sendMessage(
-      { action: START_SCREEN_RECORDING },
-      (response) => {
-        console.log(`${START_SCREEN_RECORDING} response`, response);
-      }
-    );
-  }
+//     // Start recording
+//     const videoElement = document.querySelector('video');
+//     chrome.runtime.sendMessage(
+//       { action: START_SCREEN_RECORDING },
+//       (response) => {
+//         console.log(`${START_SCREEN_RECORDING} response`, response);
+//       }
+//     );
+//   }
 
-  /**
-   *
-   * @param {(dataURI: string) => void} callback
-   */
-  endRecording(callback) {
-    this.isStartRecording = false;
-    chrome.runtime.sendMessage({ action: END_SCREEN_RECORDING }, (response) => {
-      console.log(`${END_SCREEN_RECORDING} response`, response);
-      callback(response);
-    });
-  }
-}
+//   /**
+//    *
+//    * @param {(dataURI: string) => void} callback
+//    */
+//   endRecording(callback) {
+//     this.isStartRecording = false;
+//     chrome.runtime.sendMessage({ action: END_SCREEN_RECORDING }, (response) => {
+//       console.log(`${END_SCREEN_RECORDING} response`, response);
+//       callback(response);
+//     });
+//   }
+// }
 
-const screenRecorder = new ScreenRecorder();
+// const screenRecorder = new ScreenRecorder();
 
 /**
  *
@@ -379,42 +399,46 @@ function getAllStorageLocalData() {
   });
 }
 
-const main = async () => {
-  const localData = await getAllStorageLocalData();
-  if (!localData.videoURL) {
-    return;
-  }
+const main = () => {
+  try {
+    chrome.storage.local.get(['videoURL'], (items) => {
+      if (chrome.runtime.lastError || !items.videoURL) {
+        return;
+      }
 
-  addCustomStyles(`
-    body {
+      addCustomStyles(`
+      body {
         display: grid; 
         grid-template-columns: 1fr 1fr;
-    }
-
-    .notion-frame {
+      }
+      
+      .notion-frame {
         width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-    }
-
-    .notion-selectable.notion-collection_view-block {
+      }
+      
+      .notion-selectable.notion-collection_view-block {
         width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-    }
-  `);
-  const videoWrapper = createVideoWrapper(localData.videoURL);
-  const notionWrapper = createNotionWrapper();
+      }
+      `);
 
-  // Create new body
-  const newBody = document.createElement('body');
-  newBody.appendChild(videoWrapper);
-  newBody.appendChild(notionWrapper);
+      const videoWrapper = createVideoWrapper(items.videoURL);
+      const notionWrapper = createNotionWrapper();
 
-  // Remove current body
-  getBodyElement().remove();
-  // Add new body
-  document.documentElement.appendChild(newBody);
-  document.documentElement.addEventListener('keydown', handleKeyDown);
+      // Create new body
+      const newBody = document.createElement('body');
+      newBody.appendChild(videoWrapper);
+      newBody.appendChild(notionWrapper);
 
-  // Reset video url
-  chrome.storage.local.clear();
+      // Remove current body
+      getBodyElement().remove();
+      // Add new body
+      document.documentElement.appendChild(newBody);
+      document.documentElement.addEventListener('keydown', handleKeyDown);
+    });
+  } finally {
+    // Reset video url
+    chrome.storage.local.clear();
+  }
 };
 
 main();

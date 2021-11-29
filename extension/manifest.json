@@ -10,8 +10,11 @@
       "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
     },
     {
-      "js": ["youtube.js"],
-      "matches": ["http://www.youtube.com/*", "https://www.youtube.com/*"],
+      "js": ["recorder.js"],
+      "matches": [
+        "https://www.youtube.com/embed/*",
+        "https://player.vimeo.com/video/*"
+      ],
       "all_frames": true
     }
   ],
