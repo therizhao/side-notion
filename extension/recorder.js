@@ -1,5 +1,3 @@
-const START_SCREEN_RECORDING = 'START_SCREEN_RECORDING';
-const END_SCREEN_RECORDING = 'END_SCREEN_RECORDING';
 const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
 const NOTION_URL = 'https://www.notion.so';
 
@@ -15,7 +13,7 @@ const getVideoElement = () => {
  *
  * @returns {string} video screenshot data uri
  */
-const takeScreenshot = () => {
+const captureVideo = () => {
   const videoElement = getVideoElement();
   const { width, height } = videoElement.getBoundingClientRect();
 
@@ -111,44 +109,75 @@ const takeScreenshot = () => {
 
 // const screenRecorder = new ScreenRecorder();
 
-const blobToDataURL = (blob, callback) => {
-  const fileReader = new FileReader();
-  fileReader.onload = function (e) {
-    callback(e.target.result);
-  };
-  fileReader.readAsDataURL(blob);
+// const blobToDataURL = (blob, callback) => {
+//   const fileReader = new FileReader();
+//   fileReader.onload = function (e) {
+//     callback(e.target.result);
+//   };
+//   fileReader.readAsDataURL(blob);
+// };
+
+/**
+ * @returns {boolean} true iff is iframe created by sidenotion
+ */
+const isSideNotionIFrame = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const src = urlParams.get('src');
+  return src === 'sidenotion';
+};
+
+/**
+ * @returns {boolean} true iff is iframe created by sidenotion
+ */
+const getVideoURL = () => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get(['videoURL'], (items) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
+      }
+
+      return resolve(items.videoURL);
+    });
+  });
+};
+
+const isActiveVideoURL = async () => {
+  const videoURL = await getVideoURL();
+  return videoURL === window.location.href;
+};
+
+const handleMessage = async (message, sendResponse) => {
+  try {
+    console.log(message);
+    if (!isSideNotionIFrame() && !(await isActiveVideoURL())) {
+      return;
+    }
+
+    switch (message.request.action) {
+      case TAKE_SCREENSHOT:
+        sendResponse(captureVideo());
+        break;
+      // case START_SCREEN_RECORDING:
+      //   screenRecorder.startRecording();
+      //   sendResponse('Recording started');
+      //   break;
+      // case END_SCREEN_RECORDING:
+      //   const blob = screenRecorder.endRecording();
+      //   blobToDataURL(blob, sendResponse);
+      //   break;
+      default:
+        break;
+    }
+  } catch (error) {
+    console.error('Unexpected error', error);
+  }
 };
 
 const main = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const src = urlParams.get('src');
-  // Enable listener only for side notion iframe (not for the other iframes in the window)
-  if (src === 'sidenotion') {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      // Only allow notion to send request to us
-      if (message.sender.origin !== NOTION_URL) {
-        return;
-      }
-
-      switch (message.request.action) {
-        case TAKE_SCREENSHOT:
-          sendResponse(takeScreenshot());
-          break;
-        // case START_SCREEN_RECORDING:
-        //   screenRecorder.startRecording();
-        //   sendResponse('Recording started');
-        //   break;
-        // case END_SCREEN_RECORDING:
-        //   const blob = screenRecorder.endRecording();
-        //   blobToDataURL(blob, sendResponse);
-        //   break;
-        default:
-          break;
-      }
-
-      return true;
-    });
-  }
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    handleMessage(message, sendResponse);
+    return true;
+  });
 };
 
 main();

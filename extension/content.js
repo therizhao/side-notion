@@ -142,10 +142,11 @@ const addCustomStyles = (cssRules) => {
 
 /**
  *
+ * @param {string} tabID to take video screenshot from
  * @param {(dataURI: string) => void} callback
  */
-const takeScreenshot = (callback) => {
-  chrome.runtime.sendMessage({ action: TAKE_SCREENSHOT }, (response) => {
+const takeScreenshot = (tabID, callback) => {
+  chrome.runtime.sendMessage({ action: TAKE_SCREENSHOT, tabID }, (response) => {
     callback(response);
   });
 };
@@ -243,57 +244,57 @@ const pasteToNotion = async (blob) => {
   scrollToBottomNotion();
 };
 
-function simulateDragDrop(sourceNode, destinationNode, file) {
-  let EVENT_TYPES = {
-    DRAG_END: 'dragend',
-    DRAG_START: 'dragstart',
-    DROP: 'drop',
-  };
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(file);
+// function simulateDragDrop(sourceNode, destinationNode, file) {
+//   let EVENT_TYPES = {
+//     DRAG_END: 'dragend',
+//     DRAG_START: 'dragstart',
+//     DROP: 'drop',
+//   };
+//   const dataTransfer = new DataTransfer();
+//   dataTransfer.items.add(file);
 
-  function createCustomEvent(type) {
-    let event = new DragEvent(type, { dataTransfer });
-    event.dataTransfer = dataTransfer;
-    return event;
-  }
+//   function createCustomEvent(type) {
+//     let event = new DragEvent(type, { dataTransfer });
+//     event.dataTransfer = dataTransfer;
+//     return event;
+//   }
 
-  function dispatchEvent(node, type, event) {
-    if (node.dispatchEvent) {
-      return node.dispatchEvent(event);
-    }
-    if (node.fireEvent) {
-      return node.fireEvent('on' + type, event);
-    }
-  }
+//   function dispatchEvent(node, type, event) {
+//     if (node.dispatchEvent) {
+//       return node.dispatchEvent(event);
+//     }
+//     if (node.fireEvent) {
+//       return node.fireEvent('on' + type, event);
+//     }
+//   }
 
-  let event = createCustomEvent(EVENT_TYPES.DRAG_START);
-  dispatchEvent(sourceNode, EVENT_TYPES.DRAG_START, event);
+//   let event = createCustomEvent(EVENT_TYPES.DRAG_START);
+//   dispatchEvent(sourceNode, EVENT_TYPES.DRAG_START, event);
 
-  let dropEvent = createCustomEvent(EVENT_TYPES.DROP);
-  dropEvent.dataTransfer = event.dataTransfer;
-  dispatchEvent(destinationNode, EVENT_TYPES.DROP, dropEvent);
+//   let dropEvent = createCustomEvent(EVENT_TYPES.DROP);
+//   dropEvent.dataTransfer = event.dataTransfer;
+//   dispatchEvent(destinationNode, EVENT_TYPES.DROP, dropEvent);
 
-  let dragEndEvent = createCustomEvent(EVENT_TYPES.DRAG_END);
-  dragEndEvent.dataTransfer = event.dataTransfer;
-  dispatchEvent(sourceNode, EVENT_TYPES.DRAG_END, dragEndEvent);
-}
+//   let dragEndEvent = createCustomEvent(EVENT_TYPES.DRAG_END);
+//   dragEndEvent.dataTransfer = event.dataTransfer;
+//   dispatchEvent(sourceNode, EVENT_TYPES.DRAG_END, dragEndEvent);
+// }
 
-const dropToNotion = async (file) => {
-  const firstBlock = document.querySelector(
-    'div.notion-page-content > div:first-child'
-  );
-  const lastBlock = document.querySelector(
-    'div.notion-page-content > div:last-child'
-  );
-  firstBlock.addEventListener('drop', console.log);
-  firstBlock.addEventListener('dragstart', console.log);
-  firstBlock.addEventListener('dragend', console.log);
-  lastBlock.addEventListener('drop', console.log);
-  lastBlock.addEventListener('dragstart', console.log);
-  lastBlock.addEventListener('dragend', console.log);
-  simulateDragDrop(firstBlock, lastBlock, file);
-};
+// const dropToNotion = async (file) => {
+//   const firstBlock = document.querySelector(
+//     'div.notion-page-content > div:first-child'
+//   );
+//   const lastBlock = document.querySelector(
+//     'div.notion-page-content > div:last-child'
+//   );
+//   firstBlock.addEventListener('drop', console.log);
+//   firstBlock.addEventListener('dragstart', console.log);
+//   firstBlock.addEventListener('dragend', console.log);
+//   lastBlock.addEventListener('drop', console.log);
+//   lastBlock.addEventListener('dragstart', console.log);
+//   lastBlock.addEventListener('dragend', console.log);
+//   simulateDragDrop(firstBlock, lastBlock, file);
+// };
 
 // const tempPasteExp = async () => {
 //   const url = 'https://www.youtube.com/watch?v=A03oI0znAoc';
@@ -357,12 +358,13 @@ const dropToNotion = async (file) => {
 
 /**
  *
+ * @param {string} tabID to call actions on
  * @param {KeyboardEvent} event
  */
-const handleKeyDown = (event) => {
+const handleKeyDown = (tabID, event) => {
   // cmd + shift + .
   if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === '.') {
-    takeScreenshot((dataURI) => {
+    takeScreenshot(tabID, (dataURI) => {
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
     });
@@ -384,60 +386,102 @@ const handleKeyDown = (event) => {
   // }
 };
 
-function getAllStorageLocalData() {
-  // Immediately return a promise and start asynchronous work
+/**
+ *
+ * @param {string[]} keys
+ */
+const getLocalStorageData = (keys) => {
   return new Promise((resolve, reject) => {
-    // Asynchronously fetch all data from storage.sync.
-    chrome.storage.local.get(null, (items) => {
-      // Pass any observed errors down the promise chain.
+    chrome.storage.local.get(keys, (items) => {
       if (chrome.runtime.lastError) {
         return reject(chrome.runtime.lastError);
       }
-      // Pass the data retrieved from storage down the promise chain.
       resolve(items);
     });
   });
-}
+};
 
-const main = () => {
-  try {
-    chrome.storage.local.get(['videoURL'], (items) => {
-      if (chrome.runtime.lastError || !items.videoURL) {
-        return;
+const isYoutubeOrVimeo = () =>
+  window.location.href.includes('youtube.com') ||
+  window.location.href.includes('vimeo.com');
+
+/**
+ *
+ * @param {string} videoURL
+ */
+const addIFrameElements = (videoURL) => {
+  addCustomStyles(`
+  body {
+    display: grid; 
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .notion-frame {
+    width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
+  }
+  
+  .notion-selectable.notion-collection_view-block {
+    width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
+  }
+  `);
+
+  const videoWrapper = createVideoWrapper(items.videoURL);
+  const notionWrapper = createNotionWrapper();
+
+  // Create new body
+  const newBody = document.createElement('body');
+  newBody.appendChild(videoWrapper);
+  newBody.appendChild(notionWrapper);
+
+  // Remove current body
+  getBodyElement().remove();
+  // Add new body
+  document.documentElement.appendChild(newBody);
+};
+
+/**
+ *
+ * @param {string} tabID
+ */
+const addKeydownListener = (tabID) => {
+  document.documentElement.addEventListener('keydown', (event) => {
+    handleKeyDown(tabID, event);
+  });
+};
+
+const getCurrentTabID = () => {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        return reject(chrome.runtime.lastError);
       }
 
-      addCustomStyles(`
-      body {
-        display: grid; 
-        grid-template-columns: 1fr 1fr;
-      }
-      
-      .notion-frame {
-        width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-      }
-      
-      .notion-selectable.notion-collection_view-block {
-        width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-      }
-      `);
-
-      const videoWrapper = createVideoWrapper(items.videoURL);
-      const notionWrapper = createNotionWrapper();
-
-      // Create new body
-      const newBody = document.createElement('body');
-      newBody.appendChild(videoWrapper);
-      newBody.appendChild(notionWrapper);
-
-      // Remove current body
-      getBodyElement().remove();
-      // Add new body
-      document.documentElement.appendChild(newBody);
-      document.documentElement.addEventListener('keydown', handleKeyDown);
+      const activeTab = tabs[0];
+      return resolve(activeTab.id);
     });
+  });
+};
+
+const main = async () => {
+  try {
+    const { videoURL, activeTabID } = await getLocalStorageData([
+      'videoURL',
+      'activeTabID',
+    ]);
+
+    if (isYoutubeOrVimeo()) {
+      addIFrameElements(videoURL);
+      addKeydownListener(await getCurrentTabID());
+      return;
+    }
+
+    addKeydownListener(activeTabID);
+  } catch (err) {
+    console.log('error', err);
   } finally {
     // Reset video url
-    chrome.storage.local.clear();
+    // chrome.storage.local.clear();
+    // later only clear if leave window
   }
 };
 

@@ -11,10 +11,7 @@
     },
     {
       "js": ["recorder.js"],
-      "matches": [
-        "https://www.youtube.com/embed/*",
-        "https://player.vimeo.com/video/*"
-      ],
+      "matches": ["https://*/*"],
       "all_frames": true
     }
   ],
@@ -39,6 +36,7 @@
     "clipboardRead",
     "desktopCapture"
   ],
+  "host_permissions": ["*://*/*"],
   "short_name": "SideNotion",
   "update_url": "https://clients2.google.com/service/update2/crx",
   "version": "1.4.12"
