@@ -6,6 +6,16 @@
   },
   "content_scripts": [
     {
+      "js": ["constants.js"],
+      "matches": ["https://*/*"],
+      "all_frames": true
+    },
+    {
+      "js": ["utils.js"],
+      "matches": ["https://*/*"],
+      "all_frames": true
+    },
+    {
       "js": ["content.js"],
       "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
     },
@@ -36,7 +46,7 @@
     "clipboardRead",
     "desktopCapture"
   ],
-  "host_permissions": ["*://*/*"],
+  "host_permissions": ["<all_urls>"],
   "short_name": "SideNotion",
   "update_url": "https://clients2.google.com/service/update2/crx",
   "version": "1.4.12"

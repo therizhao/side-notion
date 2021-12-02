@@ -1,19 +1,8 @@
-const TAKE_SCREENSHOT = 'TAKE_SCREENSHOT';
-const NOTION_URL = 'https://www.notion.so';
-
-/**
- *
- * @returns {HTMLVideoElement}
- */
-const getVideoElement = () => {
-  return document.documentElement.querySelector('video');
-};
-
 /**
  *
  * @returns {string} video screenshot data uri
  */
-const captureVideo = () => {
+const captureVideoIFrame = () => {
   const videoElement = getVideoElement();
   const { width, height } = videoElement.getBoundingClientRect();
 
@@ -126,21 +115,6 @@ const isSideNotionIFrame = () => {
   return src === 'sidenotion';
 };
 
-/**
- * @returns {boolean} true iff is iframe created by sidenotion
- */
-const getVideoURL = () => {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(['videoURL'], (items) => {
-      if (chrome.runtime.lastError) {
-        return reject(chrome.runtime.lastError);
-      }
-
-      return resolve(items.videoURL);
-    });
-  });
-};
-
 const isActiveVideoURL = async () => {
   const videoURL = await getVideoURL();
   return videoURL === window.location.href;
@@ -148,23 +122,14 @@ const isActiveVideoURL = async () => {
 
 const handleMessage = async (message, sendResponse) => {
   try {
-    console.log(message);
     if (!isSideNotionIFrame() && !(await isActiveVideoURL())) {
       return;
     }
 
-    switch (message.request.action) {
-      case TAKE_SCREENSHOT:
-        sendResponse(captureVideo());
+    switch (message.action) {
+      case TAKE_CANVAS_SHOT:
+        sendResponse(captureVideoIFrame());
         break;
-      // case START_SCREEN_RECORDING:
-      //   screenRecorder.startRecording();
-      //   sendResponse('Recording started');
-      //   break;
-      // case END_SCREEN_RECORDING:
-      //   const blob = screenRecorder.endRecording();
-      //   blobToDataURL(blob, sendResponse);
-      //   break;
       default:
         break;
     }
@@ -173,11 +138,11 @@ const handleMessage = async (message, sendResponse) => {
   }
 };
 
-const main = () => {
+const recorder = () => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sendResponse);
     return true;
   });
 };
 
-main();
+recorder();
