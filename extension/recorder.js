@@ -1,3 +1,8 @@
+const getVideoPosition = () => {
+  const videoElement = getVideoElement();
+  return videoElement.getBoundingClientRect();
+};
+
 /**
  *
  * @returns {string} video screenshot data uri
@@ -120,16 +125,28 @@ const isActiveVideoURL = async () => {
   return videoURL === window.location.href;
 };
 
-const handleMessage = async (message, sendResponse) => {
-  try {
-    if (!isSideNotionIFrame() && !(await isActiveVideoURL())) {
-      return;
-    }
+const showActiveVideo = () => {
+  const videoElement = getVideoElement();
+  videoElement.style.boxShadow = '0 0 0 4px rgb(127 218 255)';
+};
 
+const handleMessage = async (message, sendResponse) => {
+  console.log(message);
+
+  try {
     switch (message.action) {
+      case GET_VIDEO_POSITION_DATA:
+        console.log('good');
+        sendResponse(getVideoPosition());
+        break;
       case TAKE_CANVAS_SHOT:
+        if (!isSideNotionIFrame() && !(await isActiveVideoURL())) {
+          return;
+        }
         sendResponse(captureVideoIFrame());
         break;
+      case SHOW_ACTIVE_VIDEO:
+        showActiveVideo();
       default:
         break;
     }
@@ -139,6 +156,7 @@ const handleMessage = async (message, sendResponse) => {
 };
 
 const recorder = () => {
+  console.log('hllo');
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sendResponse);
     return true;

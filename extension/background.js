@@ -35,15 +35,24 @@ const messageHandler = async (request, sender, sendResponse) => {
         const canvasShotDataURI = await sendMessage(request.tabID, {
           action: request.action,
         });
-        sendResponse(dataURI);
+        sendResponse({ dataURI: canvasShotDataURI });
         break;
       case TAKE_SCREEN_SHOT:
         const tab = await getTab(request.tabID);
         const screenShotDataURI = await screenCapture(tab.windowId);
-        sendResponse(screenShotDataURI);
+        const videoPositionData = await sendMessage(request.tabID, {
+          action: GET_VIDEO_POSITION_DATA,
+        });
+        sendResponse({ dataURI: screenShotDataURI, videoPositionData });
         break;
       case GET_CURRENT_TAB_ID:
         sendResponse({ tabID: sender.tab.id });
+        break;
+      case SHOW_ACTIVE_VIDEO:
+        await sendMessage(request.tabID, {
+          action: request.action,
+        });
+        sendResponse({ success: true });
         break;
       default:
         break;

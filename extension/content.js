@@ -104,13 +104,25 @@ const createNotionWrapper = () => {
 /**
  *
  * @param {string} tabID to take video screenshot from
+ * @param {boolean} isSameWindow true iff video frame is in same window
  * @returns {Promise<string>} dataURI of screenshot
  */
-const takeScreenshot = (tabID) => {
-  return chromeSendRuntimeMessage({
+const takeScreenshot = async (tabID, isSameWindow) => {
+  if (isSameWindow) {
+    const { dataURI } = await chromeSendRuntimeMessage({
+      action: TAKE_CANVAS_SHOT,
+      tabID,
+    });
+    console.log(dataURI);
+    return dataURI;
+  }
+
+  const { dataURI, videoPositionData } = await chromeSendRuntimeMessage({
     action: TAKE_SCREEN_SHOT,
     tabID,
   });
+  const croppedDataURI = await cropImage(dataURI, videoPositionData);
+  return croppedDataURI;
 };
 
 /**
@@ -125,11 +137,17 @@ const copyBlobToClipboard = (blob) => {
   return navigator.clipboard.write([clipboardItem]);
 };
 
-const scrollToBottomNotion = () => {
-  const notionScroller = document.querySelector(
-    'div.notion-scroller.vertical.horizontal'
-  );
-  notionScroller.scrollTo(0, notionScroller.scrollHeight);
+const getNotionScroller = () => {
+  return document.querySelector('div.notion-scroller.vertical.horizontal');
+};
+
+const getNotionScrollHeight = () => {
+  return getNotionScroller().scrollTop;
+};
+
+const scrollToPositionNotion = (scrollTop) => {
+  const notionScroller = getNotionScroller();
+  notionScroller.scrollTo(0, scrollTop);
 };
 
 const pasteFromClipboardToNotion = () => {
@@ -147,9 +165,11 @@ const pasteFromClipboardToNotion = () => {
  * Reference: https://newbedev.com/why-is-document-execcommand-paste-not-working-in-google-chrome
  */
 const pasteToNotion = async (blob) => {
+  const scrollTop = getNotionScrollHeight();
   await copyBlobToClipboard(blob);
   pasteFromClipboardToNotion();
-  scrollToBottomNotion();
+  // Scroll back to previous position (Notion automatically scrolls to top after paste)
+  scrollToPositionNotion(scrollTop);
 };
 
 // function simulateDragDrop(sourceNode, destinationNode, file) {
@@ -267,23 +287,24 @@ const pasteToNotion = async (blob) => {
 /**
  *
  * @param {string} tabID to call actions on
+ * @param {boolean} isSameWindow true iff video frame is in same window
  * @param {KeyboardEvent} event
  */
-const handleKeyDown = async (tabID, event) => {
+const handleKeyDown = async (tabID, isSameWindow, event) => {
   try {
-    // cmd + shift + .
+    // cmd + shift + ,
     if (
       (event.metaKey || event.ctrlKey) &&
       event.shiftKey &&
-      event.key === '.'
+      event.key === ','
     ) {
-      const dataURI = await takeScreenshot(tabID);
+      const dataURI = await takeScreenshot(tabID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
       return;
     }
 
-    // cmd + shift + ,
+    // cmd + shift + .
     // if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
     //   if (screenRecorder.isStartRecording) {
     //     screenRecorder.endRecording((dataURI) => {
@@ -338,11 +359,54 @@ const addIFrameElements = (videoURL) => {
 /**
  *
  * @param {string} tabID
+ * @param {boolean} isSameWindow true iff video frame is in same window
  */
-const addKeydownListener = (tabID) => {
+const addKeydownListener = (tabID, isSameWindow) => {
   document.documentElement.addEventListener('keydown', (event) => {
-    handleKeyDown(tabID, event);
+    handleKeyDown(tabID, isSameWindow, event);
   });
+};
+
+const showUsageHint = () => {
+  const bodyElement = getBodyElement();
+  const divElement = document.createElement('div');
+
+  const labelElement = document.createElement('span');
+  labelElement.textContent = 'Screenshot';
+
+  const cmdElement = document.createElement('span');
+  cmdElement.textContent = 'cmd+shift+,';
+
+  divElement.appendChild(labelElement);
+  divElement.appendChild(cmdElement);
+
+  divElement.style.cssText = `
+    align-items: center;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    padding: 6px 12px;
+    background: white;
+    max-width: calc(100vw - 24px);
+    color: rgb(55, 53, 47);
+    box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+    border-radius: 3px;
+    z-index: 101;
+    font-size: 14px;
+    display: inline-flex;
+  `;
+  labelElement.style.cssText = `
+    margin-right: 7px;
+    color: rgba(55, 53, 47, 0.6);
+  `;
+  cmdElement.style.cssText = `
+    color: #afafaf;
+    font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
+    font-size: 90%;
+    line-height: normal;
+  `;
+
+  bodyElement.appendChild(divElement);
 };
 
 const addListener = async () => {
@@ -353,16 +417,18 @@ const addListener = async () => {
       'activeTabID',
     ]);
     const currentTabID = await getCurrentTabID();
+    const isSameWindow = isYoutubeOrVimeo(videoURL);
 
     console.log('hi', activeTabID, currentTabID);
 
-    if (isYoutubeOrVimeo(videoURL)) {
+    if (isSameWindow) {
       addIFrameElements(videoURL);
-      addKeydownListener(currentTabID);
-      return;
+      addKeydownListener(currentTabID, isSameWindow);
+    } else {
+      addKeydownListener(activeTabID, isSameWindow);
     }
 
-    addKeydownListener(activeTabID);
+    showUsageHint();
   } catch (err) {
     errorLog(addListener.name, err);
   } finally {

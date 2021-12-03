@@ -122,6 +122,29 @@ const isYoutubeOrVimeo = (url) =>
 
 // DOM UTILS
 
+const cropImage = (dataURI, positionData) => {
+  const scale = window.devicePixelRatio;
+  const x = Math.ceil(scale * positionData.x);
+  const y = Math.ceil(scale * positionData.y);
+  const width = Math.ceil(scale * positionData.width);
+  const height = Math.ceil(scale * positionData.height);
+
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = dataURI;
+    img.onload = () => {
+      ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+      ctx.save();
+      const croppedDataURI = canvas.toDataURL('image/png');
+      resolve(croppedDataURI);
+    };
+  });
+};
+
 const createStylesElement = (cssRules) => {
   const styles = document.createElement('style');
   styles.type = 'text/css';

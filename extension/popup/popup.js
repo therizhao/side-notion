@@ -19,6 +19,10 @@ const handleTakeNotes = async (event) => {
     chrome.tabs.create({ url: NOTION_URL });
   } else {
     chrome.windows.create({ url: NOTION_URL });
+    await chromeSendRuntimeMessage({
+      action: SHOW_ACTIVE_VIDEO,
+      tabID: activeTab.id,
+    });
   }
 
   window.close();
