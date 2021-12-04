@@ -36,6 +36,20 @@ const chromeSendRuntimeMessage = (message) => {
 };
 
 /**
+ *
+ * @typedef DisplayUnitInfo
+ *
+ */
+
+/**
+ *
+ * @returns {Promise<DisplayUnitInfo[]>}
+ */
+const chromeGetDisplayInfo = () => {
+  return chrome.system.display.getInfo();
+};
+
+/**
  * @returns {boolean} true iff is iframe created by sidenotion
  */
 const getVideoURL = () => {

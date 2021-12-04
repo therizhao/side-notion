@@ -27,9 +27,14 @@ const sendMessage = (tabID, request) => {
   });
 };
 
+const getScreenShotDataURI = async (tabID) => {
+  const tab = await getTab(tabID);
+  const screenShotDataURI = await screenCapture(tab.windowId);
+  return screenShotDataURI;
+};
+
 const messageHandler = async (request, sender, sendResponse) => {
   try {
-    console.log(request.tabID);
     switch (request.action) {
       case TAKE_CANVAS_SHOT:
         const canvasShotDataURI = await sendMessage(request.tabID, {
@@ -38,27 +43,42 @@ const messageHandler = async (request, sender, sendResponse) => {
         sendResponse({ dataURI: canvasShotDataURI });
         break;
       case TAKE_SCREEN_SHOT:
-        const tab = await getTab(request.tabID);
-        const screenShotDataURI = await screenCapture(tab.windowId);
-        const videoPositionData = await sendMessage(request.tabID, {
-          action: GET_VIDEO_POSITION_DATA,
-        });
+        const [screenShotDataURI, videoPositionData] = await Promise.all([
+          getScreenShotDataURI(request.tabID),
+          sendMessage(request.tabID, {
+            action: GET_VIDEO_POSITION_DATA,
+          }),
+        ]);
         sendResponse({ dataURI: screenShotDataURI, videoPositionData });
+        break;
+      case GET_SCREEN_WIDTH:
+        const data = await sendMessage(request.tabID, {
+          action: request.action,
+        });
+        sendResponse({ screenWidth: data.screenWidth });
+        break;
+      case SHOW_BADGE_ACTIVE:
+        await chrome.action.setBadgeText({ text: 'S' });
+        sendResponse({ success: true });
+        break;
+      case SHOW_BADGE_INACTIVE:
+        await chrome.action.setBadgeText({ text: '' });
+        sendResponse({ success: true });
         break;
       case GET_CURRENT_TAB_ID:
         sendResponse({ tabID: sender.tab.id });
         break;
       case SHOW_ACTIVE_VIDEO:
-        await sendMessage(request.tabID, {
+        const response = await sendMessage(request.tabID, {
           action: request.action,
         });
-        sendResponse({ success: true });
+        sendResponse(response);
         break;
       default:
         break;
     }
   } catch (err) {
-    errorLog(messageHandler.name, err);
+    console.error(err.message);
   }
 };
 
@@ -66,3 +86,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   messageHandler(request, sender, sendResponse);
   return true;
 });
+
+// const activatedHandler = async (tabId) => {
+//   try {
+//     const { hasVideo } = await sendMessage(tabId, {
+//       action: QUERY_HAS_VIDEO,
+//     });
+
+//     if (hasVideo) {
+//       await chrome.action.setBadgeText({ text: 'S' });
+//     } else {
+//       await chrome.action.setBadgeText({ text: '' });
+//     }
+//   } catch (err) {
+//     await chrome.action.setBadgeText({ text: '' });
+//     console.error(err.message);
+//   }
+// };
+
+// chrome.tabs.onActivated.addListener((activatedInfo) => {
+//   activatedHandler(activatedInfo.tabId);
+// });
+
+// chrome.tabs.onCreated.addListener((tab) => {
+//   activatedHandler(tab.id);
+// });

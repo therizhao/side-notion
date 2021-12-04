@@ -304,6 +304,16 @@ const handleKeyDown = async (tabID, isSameWindow, event) => {
       return;
     }
 
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      event.shiftKey &&
+      event.key === 'x'
+    ) {
+      await chrome.storage.local.clear();
+      window.location.reload();
+      return;
+    }
+
     // cmd + shift + .
     // if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
     //   if (screenRecorder.isStartRecording) {
@@ -318,7 +328,7 @@ const handleKeyDown = async (tabID, isSameWindow, event) => {
     //   screenRecorder.startRecording();
     // }
   } catch (err) {
-    errorLog(handleKeyDown.name, err);
+    console.error(err);
   }
 };
 
@@ -367,75 +377,102 @@ const addKeydownListener = (tabID, isSameWindow) => {
   });
 };
 
-const showUsageHint = () => {
-  const bodyElement = getBodyElement();
+const showUsageHint = (usageHints) => {
+  const renderChild = ({ label, cmd }) => {
+    addCustomStyles(`
+      .usage-hint {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        padding: 6px 12px;
+        background: white;
+        width: 193px;
+        color: rgb(55, 53, 47);
+        box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
+        border-radius: 3px;
+        z-index: 101;
+        font-size: 14px;
+      }
+
+      .child-container {
+        width: 100%;
+        margin-bottom: 6px;
+        display: inline-flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .child-container:last-child {
+        margin-bottom: 0px;
+      }
+
+      .child-label {
+        margin-right: 7px;
+        color: rgba(55, 53, 47, 0.6);    
+      }
+
+      .child-cmd {
+        color: rgb(175, 175, 175);
+        font-family: SFMono-Regular, Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
+        font-size: 90%;
+        line-height: normal;
+      }
+    `);
+
+    const childContainer = document.createElement('div');
+    childContainer.className = 'child-container';
+
+    const labelElement = document.createElement('span');
+    labelElement.textContent = label;
+    labelElement.className = 'child-label';
+
+    const cmdElement = document.createElement('span');
+    cmdElement.textContent = cmd;
+    cmdElement.className = 'child-cmd';
+
+    childContainer.appendChild(labelElement);
+    childContainer.appendChild(cmdElement);
+    return childContainer;
+  };
+
   const divElement = document.createElement('div');
+  divElement.className = 'usage-hint';
+  usageHints.forEach((data) => {
+    divElement.appendChild(renderChild(data));
+  });
 
-  const labelElement = document.createElement('span');
-  labelElement.textContent = 'Screenshot';
-
-  const cmdElement = document.createElement('span');
-  cmdElement.textContent = 'cmd+shift+,';
-
-  divElement.appendChild(labelElement);
-  divElement.appendChild(cmdElement);
-
-  divElement.style.cssText = `
-    align-items: center;
-    position: absolute;
-    bottom: 16px;
-    right: 16px;
-    padding: 6px 12px;
-    background: white;
-    max-width: calc(100vw - 24px);
-    color: rgb(55, 53, 47);
-    box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
-    border-radius: 3px;
-    z-index: 101;
-    font-size: 14px;
-    display: inline-flex;
-  `;
-  labelElement.style.cssText = `
-    margin-right: 7px;
-    color: rgba(55, 53, 47, 0.6);
-  `;
-  cmdElement.style.cssText = `
-    color: #afafaf;
-    font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
-    font-size: 90%;
-    line-height: normal;
-  `;
-
+  const bodyElement = getBodyElement();
   bodyElement.appendChild(divElement);
 };
 
 const addListener = async () => {
-  console.log('hi');
   try {
     const { videoURL, activeTabID } = await getLocalStorageData([
       'videoURL',
       'activeTabID',
     ]);
-    const currentTabID = await getCurrentTabID();
-    const isSameWindow = isYoutubeOrVimeo(videoURL);
+    // const currentTabID = await getCurrentTabID();
+    // const isSameWindow = isYoutubeOrVimeo(videoURL);
 
-    console.log('hi', activeTabID, currentTabID);
-
-    if (isSameWindow) {
-      addIFrameElements(videoURL);
-      addKeydownListener(currentTabID, isSameWindow);
-    } else {
-      addKeydownListener(activeTabID, isSameWindow);
-    }
-
-    showUsageHint();
+    // if (isSameWindow) {
+    //   addIFrameElements(videoURL);
+    //   addKeydownListener(currentTabID, isSameWindow);
+    //   showUsageHint([
+    //     { label: 'Screenshot', cmd: 'cmd+shift+,' },
+    //     { label: 'Exit Video', cmd: 'cmd+shift+x' },
+    //   ]);
+    // } else {
+    addKeydownListener(activeTabID, false);
+    showUsageHint([{ label: 'Screenshot', cmd: 'cmd+shift+,' }]);
+    // }
   } catch (err) {
-    errorLog(addListener.name, err);
-  } finally {
-    // Reset video url
-    // chrome.storage.local.clear();
-    // later only clear if leave window
+    console.error(err.message);
   }
+  // } finally {
+  //   // Reset video url
+  //   // chrome.storage.local.clear();
+  //   // later only clear if leave window
+  // }
 };
 
 addListener();

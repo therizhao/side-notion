@@ -131,12 +131,9 @@ const showActiveVideo = () => {
 };
 
 const handleMessage = async (message, sendResponse) => {
-  console.log(message);
-
   try {
     switch (message.action) {
       case GET_VIDEO_POSITION_DATA:
-        console.log('good');
         sendResponse(getVideoPosition());
         break;
       case TAKE_CANVAS_SHOT:
@@ -147,20 +144,30 @@ const handleMessage = async (message, sendResponse) => {
         break;
       case SHOW_ACTIVE_VIDEO:
         showActiveVideo();
+        sendResponse({ success: true });
+        break;
+      case GET_SCREEN_WIDTH:
+        sendResponse({ screenWidth: window.screen.availWidth });
+        break;
+      case QUERY_HAS_VIDEO:
+        const hasVideo = getVideoElement() !== null;
+        sendResponse({ hasVideo });
+        break;
       default:
         break;
     }
-  } catch (error) {
-    console.error('Unexpected error', error);
+  } catch (err) {
+    console.error(err.message);
   }
 };
 
 const recorder = () => {
-  console.log('hllo');
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sendResponse);
     return true;
   });
+
+  console.log('RECORDER LOADED');
 };
 
 recorder();
