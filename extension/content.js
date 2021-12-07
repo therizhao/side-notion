@@ -103,23 +103,23 @@ const createNotionWrapper = () => {
 
 /**
  *
- * @param {string} tabID to take video screenshot from
+ * @param {string} activeWindowID to take video screenshot from
  * @param {boolean} isSameWindow true iff video frame is in same window
  * @returns {Promise<string>} dataURI of screenshot
  */
-const takeScreenshot = async (tabID, isSameWindow) => {
-  if (isSameWindow) {
-    const { dataURI } = await chromeSendRuntimeMessage({
-      action: TAKE_CANVAS_SHOT,
-      tabID,
-    });
-    console.log(dataURI);
-    return dataURI;
-  }
+const takeScreenshot = async (activeWindowID, isSameWindow) => {
+  // if (isSameWindow) {
+  //   const { dataURI } = await chromeSendRuntimeMessage({
+  //     action: TAKE_CANVAS_SHOT,
+  //     tabID,
+  //   });
+  //   console.log(dataURI);
+  //   return dataURI;
+  // }
 
   const { dataURI, videoPositionData } = await chromeSendRuntimeMessage({
     action: TAKE_SCREEN_SHOT,
-    tabID,
+    activeWindowID,
   });
   const croppedDataURI = await cropImage(dataURI, videoPositionData);
   return croppedDataURI;
@@ -286,11 +286,11 @@ const pasteToNotion = async (blob) => {
 
 /**
  *
- * @param {string} tabID to call actions on
+ * @param {string} activeWindowID to call actions on
  * @param {boolean} isSameWindow true iff video frame is in same window
  * @param {KeyboardEvent} event
  */
-const handleKeyDown = async (tabID, isSameWindow, event) => {
+const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
   try {
     // cmd + shift + ,
     if (
@@ -298,21 +298,33 @@ const handleKeyDown = async (tabID, isSameWindow, event) => {
       event.shiftKey &&
       event.key === ','
     ) {
-      const dataURI = await takeScreenshot(tabID, isSameWindow);
+      const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
       return;
     }
 
+    // cmd + shift + m
     if (
       (event.metaKey || event.ctrlKey) &&
       event.shiftKey &&
-      event.key === 'x'
+      event.key === 'm'
     ) {
-      await chrome.storage.local.clear();
-      window.location.reload();
+      await chromeSendRuntimeMessage({
+        action: SHOW_CAPTURE_AREA,
+        activeWindowID,
+      });
       return;
     }
+    // if (
+    //   (event.metaKey || event.ctrlKey) &&
+    //   event.shiftKey &&
+    //   event.key === 'x'
+    // ) {
+    //   await chrome.storage.local.clear();
+    //   window.location.reload();
+    //   return;
+    // }
 
     // cmd + shift + .
     // if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
@@ -328,7 +340,9 @@ const handleKeyDown = async (tabID, isSameWindow, event) => {
     //   screenRecorder.startRecording();
     // }
   } catch (err) {
-    console.error(err);
+    console.error(err.message);
+    sendAlert(NOTION_ERR_MESSAGE);
+    chrome.storage.local.clear();
   }
 };
 
@@ -368,16 +382,17 @@ const addIFrameElements = (videoURL) => {
 
 /**
  *
- * @param {string} tabID
+ * @param {string} activeWindowID
  * @param {boolean} isSameWindow true iff video frame is in same window
  */
-const addKeydownListener = (tabID, isSameWindow) => {
+const addKeydownListener = (activeWindowID, isSameWindow) => {
   document.documentElement.addEventListener('keydown', (event) => {
-    handleKeyDown(tabID, isSameWindow, event);
+    handleKeyDown(activeWindowID, isSameWindow, event);
   });
 };
 
 const showUsageHint = (usageHints) => {
+  const bodyElement = getBodyElement();
   const renderChild = ({ label, cmd }) => {
     addCustomStyles(`
       .usage-hint {
@@ -417,6 +432,25 @@ const showUsageHint = (usageHints) => {
         font-size: 90%;
         line-height: normal;
       }
+
+      ${
+        bodyElement.classList.contains('dark')
+          ? `
+        .usage-hint {
+          background: rgb(63, 68, 71);
+          box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 3px 6px, rgb(15 15 15 / 40%) 0px 9px 24px;
+        }
+
+        .child-label {
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .child-cmd {
+          color: rgba(255, 255, 255, 0.9);
+        }
+      `
+          : ''
+      }
     `);
 
     const childContainer = document.createElement('div');
@@ -441,15 +475,14 @@ const showUsageHint = (usageHints) => {
     divElement.appendChild(renderChild(data));
   });
 
-  const bodyElement = getBodyElement();
   bodyElement.appendChild(divElement);
 };
 
 const addListener = async () => {
   try {
-    const { videoURL, activeTabID } = await getLocalStorageData([
+    const { videoURL, activeWindowID } = await getLocalStorageData([
       'videoURL',
-      'activeTabID',
+      'activeWindowID',
     ]);
     // const currentTabID = await getCurrentTabID();
     // const isSameWindow = isYoutubeOrVimeo(videoURL);
@@ -462,11 +495,15 @@ const addListener = async () => {
     //     { label: 'Exit Video', cmd: 'cmd+shift+x' },
     //   ]);
     // } else {
-    addKeydownListener(activeTabID, false);
-    showUsageHint([{ label: 'Screenshot', cmd: 'cmd+shift+,' }]);
+    addKeydownListener(activeWindowID, false);
+    showUsageHint([
+      { label: 'Capture', cmd: `${cmdKey}+shift+,` },
+      { label: 'Edit area', cmd: `${cmdKey}+shift+m` },
+    ]);
     // }
   } catch (err) {
     console.error(err.message);
+    sendAlert(NOTION_ERR_MESSAGE);
   }
   // } finally {
   //   // Reset video url

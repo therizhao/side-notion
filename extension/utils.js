@@ -60,7 +60,7 @@ const getVideoURL = () => {
  *
  * @returns {Promise<string>} current tab id
  */
-const getCurrentTabID = async () => {
+const getCurrentTabIDFromBackground = async () => {
   const { tabID } = await chromeSendRuntimeMessage({
     action: GET_CURRENT_TAB_ID,
   });
@@ -200,3 +200,15 @@ const createVideoElement = (videoUrl) => {
 const getVideoElement = () => {
   return document.documentElement.querySelector('video');
 };
+
+/**
+ *
+ * @param {string} message
+ */
+const sendAlert = (message) => {
+  alert(message);
+};
+
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+const cmdKey = isMac ? 'cmd' : 'ctrl';

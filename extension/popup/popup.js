@@ -16,60 +16,66 @@ const getActiveTabs = () => {
 const resizeOrCreateNotionWindow = async (width) => {
   // Get tabs with notion url that is not current window
   const tabs = await chrome.tabs.query({
-    currentWindow: false,
     url: `${NOTION_URL}/*`,
   });
 
   if (tabs.length > 0) {
-    const notionTab = tabs[0];
-    await chrome.windows.update(notionTab.windowId, {
-      left: width,
-      width,
-      focused: true,
-    });
-  } else {
-    await chrome.windows.create({
-      url: NOTION_URL,
-      left: width,
-      width: width,
-    });
+    // const notionTab = tabs[0];
+    // await chrome.windows.update(notionTab.windowId, {
+    //   left: width,
+    //   width,
+    //   focused: true,
+    // });
+    // await chrome.tabs.update(notionTab.id, { active: true });
+    await chrome.tabs.remove(tabs.map((tab) => tab.id));
   }
+
+  await chrome.windows.create({
+    url: NOTION_URL,
+    left: width,
+    width: width,
+  });
 };
 
 const handleSeparateWindow = async (activeTab) => {
-  const { screenWidth } = await chromeSendRuntimeMessage({
-    action: GET_SCREEN_WIDTH,
-    tabID: activeTab.id,
-  });
-  const halfWidth = Math.floor(screenWidth / 2);
+  try {
+    const { screenWidth } = await chromeSendRuntimeMessage({
+      action: GET_SCREEN_WIDTH,
+      tabID: activeTab.id,
+    });
+    const halfWidth = Math.floor(screenWidth / 2);
 
-  await chrome.windows.update(activeTab.windowId, {
-    width: halfWidth,
-  });
+    await chrome.windows.update(activeTab.windowId, {
+      width: halfWidth,
+    });
 
-  await resizeOrCreateNotionWindow(halfWidth);
-
-  await chromeSendRuntimeMessage({
-    action: SHOW_ACTIVE_VIDEO,
-    tabID: activeTab.id,
-  });
+    await resizeOrCreateNotionWindow(halfWidth);
+  } catch (err) {
+    throw new Error('Failed to create separate window');
+  }
 };
 
 const handleTakeNotes = async (event) => {
-  const tabs = await getActiveTabs();
-  const activeTab = tabs[0];
+  try {
+    const tabs = await getActiveTabs();
+    const activeTab = tabs[0];
+    const activeWindowID = activeTab.windowId;
 
-  await setLocalStorageData({
-    videoURL: activeTab.url,
-    activeTabID: activeTab.id,
-  });
-  // if (isYoutubeOrVimeo(activeTab.url)) {
-  //   chrome.tabs.create({ url: NOTION_URL });
-  // } else {
-  await handleSeparateWindow(activeTab);
-  // }
-
-  window.close();
+    await setLocalStorageData({
+      videoURL: activeTab.url,
+      activeWindowID: activeTab.windowId,
+    });
+    // if (isYoutubeOrVimeo(activeTab.url)) {
+    //   chrome.tabs.create({ url: NOTION_URL });
+    // } else {
+    await handleSeparateWindow(activeTab);
+    // }
+    window.close();
+  } catch (err) {
+    sendAlert(NOTION_ERR_MESSAGE);
+    console.error(err.message);
+    chrome.storage.local.clear();
+  }
 };
 
 const main = () => {

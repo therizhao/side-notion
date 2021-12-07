@@ -6,23 +6,18 @@
   },
   "content_scripts": [
     {
-      "js": ["constants.js"],
-      "matches": ["https://*/*"],
-      "all_frames": true
-    },
-    {
-      "js": ["utils.js"],
+      "js": [
+        "constants.js",
+        "utils.js",
+        "packages/interact.js",
+        "recorder.js"
+      ],
       "matches": ["https://*/*"],
       "all_frames": true
     },
     {
       "js": ["content.js"],
       "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
-    },
-    {
-      "js": ["recorder.js"],
-      "matches": ["https://*/*"],
-      "all_frames": true
     }
   ],
   "action": {
@@ -37,10 +32,7 @@
   "name": "SideNotion",
   "permissions": [
     "activeTab",
-    "cookies",
     "tabs",
-    "webRequest",
-    "tabCapture",
     "storage",
     "clipboardWrite",
     "clipboardRead",
