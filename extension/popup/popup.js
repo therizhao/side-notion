@@ -20,13 +20,6 @@ const resizeOrCreateNotionWindow = async (width) => {
   });
 
   if (tabs.length > 0) {
-    // const notionTab = tabs[0];
-    // await chrome.windows.update(notionTab.windowId, {
-    //   left: width,
-    //   width,
-    //   focused: true,
-    // });
-    // await chrome.tabs.update(notionTab.id, { active: true });
     await chrome.tabs.remove(tabs.map((tab) => tab.id));
   }
 
@@ -65,11 +58,8 @@ const handleTakeNotes = async (event) => {
       videoURL: activeTab.url,
       activeWindowID: activeTab.windowId,
     });
-    // if (isYoutubeOrVimeo(activeTab.url)) {
-    //   chrome.tabs.create({ url: NOTION_URL });
-    // } else {
+
     await handleSeparateWindow(activeTab);
-    // }
     window.close();
   } catch (err) {
     sendAlert(NOTION_ERR_MESSAGE);
@@ -79,6 +69,7 @@ const handleTakeNotes = async (event) => {
 };
 
 const main = () => {
+  document.getElementById('feedback-button').href = FEEDBACK_URL;
   document
     .getElementById('take-notes-button')
     .addEventListener('click', (event) => handleTakeNotes(event));

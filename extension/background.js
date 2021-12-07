@@ -30,7 +30,7 @@ const getTab = (tabID) => {
   });
 };
 
-const sendMessage = (tabID, request) => {
+const sendTabsMessage = (tabID, request) => {
   return new Promise((resolve, reject) => {
     chrome.tabs.sendMessage(
       tabID,
@@ -57,7 +57,7 @@ const getActiveTab = async (activeWindowID) => {
 const getActiveTabVideoPositionData = async (activeWindowID) => {
   const tab = await getActiveTab(activeWindowID);
 
-  return sendMessage(tab.id, {
+  return sendTabsMessage(tab.id, {
     action: GET_VIDEO_POSITION_DATA,
   });
 };
@@ -65,12 +65,6 @@ const getActiveTabVideoPositionData = async (activeWindowID) => {
 const messageHandler = async (request, sender, sendResponse) => {
   try {
     switch (request.action) {
-      case TAKE_CANVAS_SHOT:
-        const canvasShotDataURI = await sendMessage(request.tabID, {
-          action: request.action,
-        });
-        sendResponse({ dataURI: canvasShotDataURI });
-        break;
       case TAKE_SCREEN_SHOT:
         const [screenShotDataURI, videoPositionData] = await Promise.all([
           screenCapture(request.activeWindowID),
@@ -79,25 +73,14 @@ const messageHandler = async (request, sender, sendResponse) => {
         sendResponse({ dataURI: screenShotDataURI, videoPositionData });
         break;
       case GET_SCREEN_WIDTH:
-        const data = await sendMessage(request.tabID, {
+        const data = await sendTabsMessage(request.tabID, {
           action: request.action,
         });
         sendResponse({ screenWidth: data.screenWidth });
         break;
-      case SHOW_BADGE_ACTIVE:
-        await chrome.action.setBadgeText({ text: 'S' });
-        sendResponse({ success: true });
-        break;
-      case SHOW_BADGE_INACTIVE:
-        await chrome.action.setBadgeText({ text: '' });
-        sendResponse({ success: true });
-        break;
-      case GET_CURRENT_TAB_ID:
-        sendResponse({ tabID: sender.tab.id });
-        break;
       case SHOW_CAPTURE_AREA:
         const activeTab = await getActiveTab(request.activeWindowID);
-        const response = await sendMessage(activeTab.id, {
+        const response = await sendTabsMessage(activeTab.id, {
           action: request.action,
         });
         sendResponse(response);
@@ -117,28 +100,3 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.runtime.setUninstallURL(FEEDBACK_URL);
-
-// const activatedHandler = async (tabId) => {
-//   try {
-//     const { hasVideo } = await sendMessage(tabId, {
-//       action: QUERY_HAS_VIDEO,
-//     });
-
-//     if (hasVideo) {
-//       await chrome.action.setBadgeText({ text: 'S' });
-//     } else {
-//       await chrome.action.setBadgeText({ text: '' });
-//     }
-//   } catch (err) {
-//     await chrome.action.setBadgeText({ text: '' });
-//     console.error(err.message);
-//   }
-// };
-
-// chrome.tabs.onActivated.addListener((activatedInfo) => {
-//   activatedHandler(activatedInfo.tabId);
-// });
-
-// chrome.tabs.onCreated.addListener((tab) => {
-//   activatedHandler(tab.id);
-// });

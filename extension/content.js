@@ -1,122 +1,10 @@
 /**
  *
- * @param {string} url
- * @returns {string}
- */
-const getYoutubeIFrameURL = (url) => {
-  /**
-   *
-   * @param {string} url
-   * @returns {string}
-   */
-  const getYoutubeID = (url) => {
-    const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-
-    return match && match[2].length === 11 ? match[2] : null;
-  };
-
-  const id = getYoutubeID(url);
-  return `https://www.youtube.com/embed/${id}`;
-};
-
-/**
- *
- * @param {string} url
- * @returns {string}
- */
-const getVimeoIFrameURL = (url) => {
-  const regExp =
-    /^.*(vimeo\.com\/)((channels\/[A-z]+\/)|(groups\/[A-z]+\/videos\/))?([0-9]+)/;
-  const parseUrl = regExp.exec(url);
-  const videoID = parseUrl[5];
-
-  return `https://player.vimeo.com/video/${videoID}`;
-};
-
-/**
- *
- * @param {string} iframeURL
- * @returns {HTMLIFrameElement}
- */
-const createVideoIFrame = (iframeURL) => {
-  const videoIFrame = document.createElement('iframe');
-  videoIFrame.title = 'SideNotion Video';
-  // Put src = sidenotion for screencapture.js to identify
-  videoIFrame.src = `${iframeURL}?src=sidenotion`;
-  videoIFrame.style.width = '50vw';
-  videoIFrame.style.height = '100vh';
-  videoIFrame.style.background = 'black';
-  return videoIFrame;
-};
-
-/**
- *
- * @param {string} videoUrl
- * @returns {HTMLElement}
- */
-const createVideoComponent = (videoUrl) => {
-  if (videoUrl.includes('youtube')) {
-    return createVideoIFrame(getYoutubeIFrameURL(videoUrl));
-  }
-
-  if (videoUrl.includes('vimeo')) {
-    return createVideoIFrame(getVimeoIFrameURL(videoUrl));
-  }
-
-  return createVideoElement(videoUrl);
-};
-
-/**
- *
- * @param {string} videoUrl
- */
-const createVideoWrapper = (videoUrl) => {
-  const wrapper = document.createElement('div');
-  wrapper.prepend(createVideoComponent(videoUrl));
-  return wrapper;
-};
-
-/**
- *
- * @returns {HTMLDivElement}
- */
-const createNotionWrapper = () => {
-  const notionWrapper = document.createElement('div');
-  const notionBody = getBodyElement();
-
-  // Copy the children
-  while (notionBody.firstChild) {
-    notionWrapper.appendChild(notionBody.firstChild); // *Moves* the child
-  }
-
-  // Copy the attributes
-  for (let index = notionBody.attributes.length - 1; index >= 0; index -= 1) {
-    notionWrapper.attributes.setNamedItem(
-      notionBody.attributes[index].cloneNode()
-    );
-  }
-
-  return notionWrapper;
-};
-
-/**
- *
  * @param {string} activeWindowID to take video screenshot from
  * @param {boolean} isSameWindow true iff video frame is in same window
  * @returns {Promise<string>} dataURI of screenshot
  */
 const takeScreenshot = async (activeWindowID, isSameWindow) => {
-  // if (isSameWindow) {
-  //   const { dataURI } = await chromeSendRuntimeMessage({
-  //     action: TAKE_CANVAS_SHOT,
-  //     tabID,
-  //   });
-  //   console.log(dataURI);
-  //   return dataURI;
-  // }
-
   const { dataURI, videoPositionData } = await chromeSendRuntimeMessage({
     action: TAKE_SCREEN_SHOT,
     activeWindowID,
@@ -172,118 +60,6 @@ const pasteToNotion = async (blob) => {
   scrollToPositionNotion(scrollTop);
 };
 
-// function simulateDragDrop(sourceNode, destinationNode, file) {
-//   let EVENT_TYPES = {
-//     DRAG_END: 'dragend',
-//     DRAG_START: 'dragstart',
-//     DROP: 'drop',
-//   };
-//   const dataTransfer = new DataTransfer();
-//   dataTransfer.items.add(file);
-
-//   function createCustomEvent(type) {
-//     let event = new DragEvent(type, { dataTransfer });
-//     event.dataTransfer = dataTransfer;
-//     return event;
-//   }
-
-//   function dispatchEvent(node, type, event) {
-//     if (node.dispatchEvent) {
-//       return node.dispatchEvent(event);
-//     }
-//     if (node.fireEvent) {
-//       return node.fireEvent('on' + type, event);
-//     }
-//   }
-
-//   let event = createCustomEvent(EVENT_TYPES.DRAG_START);
-//   dispatchEvent(sourceNode, EVENT_TYPES.DRAG_START, event);
-
-//   let dropEvent = createCustomEvent(EVENT_TYPES.DROP);
-//   dropEvent.dataTransfer = event.dataTransfer;
-//   dispatchEvent(destinationNode, EVENT_TYPES.DROP, dropEvent);
-
-//   let dragEndEvent = createCustomEvent(EVENT_TYPES.DRAG_END);
-//   dragEndEvent.dataTransfer = event.dataTransfer;
-//   dispatchEvent(sourceNode, EVENT_TYPES.DRAG_END, dragEndEvent);
-// }
-
-// const dropToNotion = async (file) => {
-//   const firstBlock = document.querySelector(
-//     'div.notion-page-content > div:first-child'
-//   );
-//   const lastBlock = document.querySelector(
-//     'div.notion-page-content > div:last-child'
-//   );
-//   firstBlock.addEventListener('drop', console.log);
-//   firstBlock.addEventListener('dragstart', console.log);
-//   firstBlock.addEventListener('dragend', console.log);
-//   lastBlock.addEventListener('drop', console.log);
-//   lastBlock.addEventListener('dragstart', console.log);
-//   lastBlock.addEventListener('dragend', console.log);
-//   simulateDragDrop(firstBlock, lastBlock, file);
-// };
-
-// const tempPasteExp = async () => {
-//   const url = 'https://www.youtube.com/watch?v=A03oI0znAoc';
-//   const text = new Blob([url], { type: 'text/plain' });
-//   const clipboardItem = new ClipboardItem({
-//     'text/plain': text,
-//   });
-//   await navigator.clipboard.write([clipboardItem]);
-//   pasteFromClipboardToNotion();
-//   scrollToBottomNotion();
-
-//   // Poll recursively for Embed Video button to appear
-//   const clicker = () => {
-//     const elem = document.querySelector(
-//       '.notion-embed-menu div[role="button"]:nth-child(2)'
-//     );
-//     if (elem) {
-//       elem.click();
-//       return;
-//     }
-
-//     setTimeout(clicker, 100);
-//   };
-
-//   clicker();
-// };
-
-// class ScreenRecorder {
-//   constructor() {
-//     this.isStartRecording = false;
-//   }
-
-//   startRecording() {
-//     window.alert('Recording in process');
-//     this.isStartRecording = true;
-
-//     // Start recording
-//     const videoElement = document.querySelector('video');
-//     chrome.runtime.sendMessage(
-//       { action: START_SCREEN_RECORDING },
-//       (response) => {
-//         console.log(`${START_SCREEN_RECORDING} response`, response);
-//       }
-//     );
-//   }
-
-//   /**
-//    *
-//    * @param {(dataURI: string) => void} callback
-//    */
-//   endRecording(callback) {
-//     this.isStartRecording = false;
-//     chrome.runtime.sendMessage({ action: END_SCREEN_RECORDING }, (response) => {
-//       console.log(`${END_SCREEN_RECORDING} response`, response);
-//       callback(response);
-//     });
-//   }
-// }
-
-// const screenRecorder = new ScreenRecorder();
-
 /**
  *
  * @param {string} activeWindowID to call actions on
@@ -304,11 +80,11 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       return;
     }
 
-    // cmd + shift + m
+    // cmd + shift + k
     if (
       (event.metaKey || event.ctrlKey) &&
       event.shiftKey &&
-      event.key === 'm'
+      event.key === 'k'
     ) {
       await chromeSendRuntimeMessage({
         action: SHOW_CAPTURE_AREA,
@@ -316,68 +92,11 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       });
       return;
     }
-    // if (
-    //   (event.metaKey || event.ctrlKey) &&
-    //   event.shiftKey &&
-    //   event.key === 'x'
-    // ) {
-    //   await chrome.storage.local.clear();
-    //   window.location.reload();
-    //   return;
-    // }
-
-    // cmd + shift + .
-    // if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === ',') {
-    //   if (screenRecorder.isStartRecording) {
-    //     screenRecorder.endRecording((dataURI) => {
-    //       tempPasteExp();
-    //       // const videoBlob = dataURLtoFile(dataURI);
-    //       // dropToNotion(videoBlob);
-    //     });
-    //     return;
-    //   }
-
-    //   screenRecorder.startRecording();
-    // }
   } catch (err) {
     console.error(err.message);
     sendAlert(NOTION_ERR_MESSAGE);
     chrome.storage.local.clear();
   }
-};
-
-/**
- *
- * @param {string} videoURL
- */
-const addIFrameElements = (videoURL) => {
-  addCustomStyles(`
-  body {
-    display: grid; 
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .notion-frame {
-    width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-  }
-  
-  .notion-selectable.notion-collection_view-block {
-    width: 50vw !important; /* Need to set here since notion js will overwrite the elem.style value */
-  }
-  `);
-
-  const videoWrapper = createVideoWrapper(videoURL);
-  const notionWrapper = createNotionWrapper();
-
-  // Create new body
-  const newBody = document.createElement('body');
-  newBody.appendChild(videoWrapper);
-  newBody.appendChild(notionWrapper);
-
-  // Remove current body
-  getBodyElement().remove();
-  // Add new body
-  document.documentElement.appendChild(newBody);
 };
 
 /**
@@ -484,32 +203,16 @@ const addListener = async () => {
       'videoURL',
       'activeWindowID',
     ]);
-    // const currentTabID = await getCurrentTabID();
-    // const isSameWindow = isYoutubeOrVimeo(videoURL);
 
-    // if (isSameWindow) {
-    //   addIFrameElements(videoURL);
-    //   addKeydownListener(currentTabID, isSameWindow);
-    //   showUsageHint([
-    //     { label: 'Screenshot', cmd: 'cmd+shift+,' },
-    //     { label: 'Exit Video', cmd: 'cmd+shift+x' },
-    //   ]);
-    // } else {
     addKeydownListener(activeWindowID, false);
     showUsageHint([
       { label: 'Capture', cmd: `${cmdKey}+shift+,` },
-      { label: 'Edit area', cmd: `${cmdKey}+shift+m` },
+      { label: 'Edit area', cmd: `${cmdKey}+shift+k` },
     ]);
-    // }
   } catch (err) {
     console.error(err.message);
     sendAlert(NOTION_ERR_MESSAGE);
   }
-  // } finally {
-  //   // Reset video url
-  //   // chrome.storage.local.clear();
-  //   // later only clear if leave window
-  // }
 };
 
 addListener();

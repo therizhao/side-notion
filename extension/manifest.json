@@ -6,12 +6,7 @@
   },
   "content_scripts": [
     {
-      "js": [
-        "constants.js",
-        "utils.js",
-        "packages/interact.js",
-        "recorder.js"
-      ],
+      "js": ["constants.js", "utils.js", "packages/interact.js", "recorder.js"],
       "matches": ["https://*/*"],
       "all_frames": true
     },
@@ -40,6 +35,5 @@
   ],
   "host_permissions": ["<all_urls>"],
   "short_name": "SideNotion",
-  "update_url": "https://clients2.google.com/service/update2/crx",
-  "version": "1.4.12"
+  "version": "1.0.0"
 }
