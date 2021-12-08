@@ -73,7 +73,6 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       && event.shiftKey
       && event.key === ','
     ) {
-      console.log('fired ss');
       const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
@@ -86,10 +85,12 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       && event.shiftKey
       && event.key === 'k'
     ) {
-      await chromeSendRuntimeMessage({
-        action: SHOW_CAPTURE_AREA,
-        activeWindowID,
-      });
+      await chromeSendRuntimeMessage(
+        {
+          action: TOGGLE_CAPTURE_AREA,
+          activeWindowID,
+        },
+      );
       return;
     }
   } catch (err) {
@@ -120,7 +121,7 @@ const showUsageHint = (usageHints) => {
         right: 16px;
         padding: 6px 12px;
         background: white;
-        width: 193px;
+        width: 223px;
         color: rgb(55, 53, 47);
         box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
         border-radius: 3px;
@@ -204,7 +205,7 @@ const addListener = async () => {
     addKeydownListener(activeWindowID, false);
     showUsageHint([
       { label: 'Capture', cmd: `${cmdKey}+shift+,` },
-      { label: 'Edit area', cmd: `${cmdKey}+shift+k` },
+      { label: 'Show/hide area', cmd: `${cmdKey}+shift+k` },
     ]);
   } catch (err) {
     sendAlert(NOTION_ERR_MESSAGE);

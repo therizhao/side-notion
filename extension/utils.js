@@ -77,8 +77,6 @@ const cropImage = (dataURI, positionData) => {
   const height = Math.ceil(scale * positionData.height);
 
   return new Promise((resolve) => {
-    console.log(x, y, width, height);
-
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;

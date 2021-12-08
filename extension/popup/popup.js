@@ -73,6 +73,7 @@ const handleTakeNotes = async () => {
 
 const main = () => {
   document.getElementById('feedback-button').href = FEEDBACK_URL;
+  document.getElementById('rate-button').href = REVIEW_URL;
   document
     .getElementById('take-notes-button')
     .addEventListener('click', (event) => handleTakeNotes(event));

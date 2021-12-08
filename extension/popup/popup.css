@@ -7,14 +7,14 @@ body {
   font-family: system-ui, sans-serif;
 }
 
-.button:first-child {
-  margin-bottom: 8px;
-}
-
 a.button {
   color: inherit;
   text-decoration: inherit;
   padding: 0;
+}
+
+.button:first-child {
+  margin-top: 0;
 }
 
 .button {
@@ -31,6 +31,7 @@ a.button {
   border-radius: 3px;
   line-height: 1.2;
   font-size: 14px;
+  margin-top: 8px;
   border: none;
 }
 

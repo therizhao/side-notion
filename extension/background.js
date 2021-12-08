@@ -28,7 +28,6 @@ const getActiveTab = async (activeWindowID) => {
 };
 
 const getActiveTabVideoPositionData = async (activeWindowID) => {
-  console.log('take ss data');
   const tab = await getActiveTab(activeWindowID);
 
   return sendTabsMessage(tab.id, {
@@ -40,7 +39,6 @@ const messageHandler = async (request, sender, sendResponse) => {
   try {
     switch (request.action) {
       case TAKE_SCREEN_SHOT: {
-        console.log('fired ss');
         const [screenShotDataURI, videoPositionData] = await Promise.all([
           screenCapture(request.activeWindowID),
           getActiveTabVideoPositionData(request.activeWindowID),
@@ -55,7 +53,7 @@ const messageHandler = async (request, sender, sendResponse) => {
         sendResponse({ screenWidth: data.screenWidth });
         break;
       }
-      case SHOW_CAPTURE_AREA: {
+      case TOGGLE_CAPTURE_AREA: {
         const activeTab = await getActiveTab(request.activeWindowID);
         const response = await sendTabsMessage(activeTab.id, {
           action: request.action,
@@ -74,8 +72,8 @@ const messageHandler = async (request, sender, sendResponse) => {
         break;
     }
   } catch (err) {
-    console.error(err.message);
     sendResponse({ success: false });
+    console.error(err.message);
   }
 };
 

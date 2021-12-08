@@ -10,7 +10,6 @@ class CaptureArea {
      * @type {HTMLDivElement} captureAreaElement
      * @type {boolean} isEnabled
      * @type {boolean} isHidden
-     *
      */
     this.captureAreaElement = captureAreaElement;
     this.isEnabled = false;
@@ -37,7 +36,6 @@ class CaptureArea {
     margin: 1rem;
     overflow: hidden;
     touch-action: none;  
-    z-index: 100000000;
   `;
 
     getBodyElement().appendChild(captureAreaElement);
@@ -70,8 +68,25 @@ class CaptureArea {
     return new CaptureArea(captureAreaElement);
   }
 
+  toggle() {
+    if (this.isEnabled) {
+      this.toggleShowHide();
+    } else {
+      this.enable();
+    }
+  }
+
+  toggleShowHide() {
+    if (this.isHidden) {
+      this.show();
+    } else {
+      this.hide();
+    }
+  }
+
   enable() {
     this.captureAreaElement.style.display = 'block';
+    this.captureAreaElement.style.zIndex = '100000000';
     const videoElement = getVideoElement();
     if (videoElement) {
       const videoPosition = videoElement.getBoundingClientRect();
@@ -87,6 +102,18 @@ class CaptureArea {
     }
 
     this.isEnabled = true;
+  }
+
+  show() {
+    this.captureAreaElement.style.visibility = 'visible';
+    this.captureAreaElement.style.zIndex = '100000000';
+    this.isHidden = false;
+  }
+
+  hide() {
+    this.captureAreaElement.style.visibility = 'hidden';
+    this.captureAreaElement.style.zIndex = '-100000000';
+    this.isHidden = true;
   }
 
   getBoundingClientRect() {
@@ -120,11 +147,10 @@ const handleMessage = async (message, sendResponse) => {
   try {
     switch (message.action) {
       case GET_VIDEO_POSITION_DATA:
-        console.log('fired ss');
         sendResponse(getVideoPosition());
         break;
-      case SHOW_CAPTURE_AREA:
-        captureArea.enable();
+      case TOGGLE_CAPTURE_AREA:
+        captureArea.toggle();
         sendResponse({ success: true });
         break;
       case GET_SCREEN_WIDTH:
@@ -149,8 +175,6 @@ const recorder = () => {
     handleMessage(message, sendResponse);
     return true;
   });
-
-  console.log('RECORDER LOADED');
 };
 
 recorder();
