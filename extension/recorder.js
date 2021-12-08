@@ -1,49 +1,29 @@
-const getVideoPosition = () => {
-  const videoElement = getVideoElement();
-  if (hasCaptureArea()) {
-    const captureArea = getCaptureArea();
-    const captureAreaRect = captureArea.getBoundingClientRect();
-    captureAreaRect.width -= 10;
-    captureAreaRect.height -= 10;
-    captureAreaRect.x += 5;
-    captureAreaRect.y += 5;
-    return captureAreaRect;
+/* eslint-disable no-console */
+/* eslint-disable no-undef */
+
+/**
+ * Singleton class
+ */
+class CaptureArea {
+  constructor(captureAreaElement) {
+    /**
+     * @type {HTMLDivElement} captureAreaElement
+     * @type {boolean} isEnabled
+     * @type {boolean} isHidden
+     *
+     */
+    this.captureAreaElement = captureAreaElement;
+    this.isEnabled = false;
+    this.isHidden = false;
   }
 
-  return videoElement.getBoundingClientRect();
-};
-
-const hasCaptureArea = () => {
-  const captureArea = getCaptureArea();
-  return captureArea.style.display === 'block';
-};
-
-const getCaptureArea = () => {
-  return document.getElementById(CAPTURE_AREA_ID);
-};
-
-const showCaptureArea = () => {
-  const captureArea = getCaptureArea();
-  captureArea.style.display = 'block';
-  const videoElement = getVideoElement();
-  if (videoElement) {
-    const videoPosition = videoElement.getBoundingClientRect();
-    captureArea.style.left = `${videoPosition.left}px`;
-    captureArea.style.top = `${videoPosition.top}px`;
-    captureArea.style.width = `${videoPosition.width}px`;
-    captureArea.style.height = `${videoPosition.height}px`;
-  } else {
-    captureArea.style.left = '200px';
-    captureArea.style.top = '200px';
-    captureArea.style.width = '600px';
-    captureArea.style.height = '400px';
-  }
-};
-
-const drawCaptureArea = () => {
-  const captureArea = document.createElement('div');
-  captureArea.id = CAPTURE_AREA_ID;
-  captureArea.style.cssText = `
+  /**
+   * Factory method should only be called once
+   */
+  static init() {
+    const captureAreaElement = document.createElement('div');
+    captureAreaElement.id = CAPTURE_AREA_ID;
+    captureAreaElement.style.cssText = `
     display: none;
     position: absolute;
     box-sizing: border-box;
@@ -60,54 +40,111 @@ const drawCaptureArea = () => {
     z-index: 100000000;
   `;
 
-  getBodyElement().appendChild(captureArea);
+    getBodyElement().appendChild(captureAreaElement);
 
-  interact(`#${CAPTURE_AREA_ID}`).resizable({
-    edges: { top: true, left: true, bottom: true, right: true },
-    listeners: {
-      move: function (event) {
-        let { x, y } = event.target.dataset;
-
-        x = (parseFloat(x) || 0) + event.deltaRect.left;
-        y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-        Object.assign(event.target.style, {
-          width: `${event.rect.width}px`,
-          height: `${event.rect.height}px`,
-          transform: `translate(${x}px, ${y}px)`,
-        });
-
-        Object.assign(event.target.dataset, { x, y });
+    interact(`#${CAPTURE_AREA_ID}`).resizable({
+      edges: {
+        top: true,
+        left: true,
+        bottom: true,
+        right: true,
       },
-    },
-  });
+      listeners: {
+        move(event) {
+          let { x, y } = event.target.dataset;
+
+          x = (parseFloat(x) || 0) + event.deltaRect.left;
+          y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+          Object.assign(event.target.style, {
+            width: `${event.rect.width}px`,
+            height: `${event.rect.height}px`,
+            transform: `translate(${x}px, ${y}px)`,
+          });
+
+          Object.assign(event.target.dataset, { x, y });
+        },
+      },
+    });
+
+    return new CaptureArea(captureAreaElement);
+  }
+
+  enable() {
+    this.captureAreaElement.style.display = 'block';
+    const videoElement = getVideoElement();
+    if (videoElement) {
+      const videoPosition = videoElement.getBoundingClientRect();
+      this.captureAreaElement.style.left = `${videoPosition.left}px`;
+      this.captureAreaElement.style.top = `${videoPosition.top}px`;
+      this.captureAreaElement.style.width = `${videoPosition.width}px`;
+      this.captureAreaElement.style.height = `${videoPosition.height}px`;
+    } else {
+      this.captureAreaElement.style.left = '200px';
+      this.captureAreaElement.style.top = '200px';
+      this.captureAreaElement.style.width = '600px';
+      this.captureAreaElement.style.height = '400px';
+    }
+
+    this.isEnabled = true;
+  }
+
+  getBoundingClientRect() {
+    const captureAreaRect = this.captureAreaElement.getBoundingClientRect();
+    captureAreaRect.width -= 10;
+    captureAreaRect.height -= 10;
+    captureAreaRect.x += 5;
+    captureAreaRect.y += 5;
+    return captureAreaRect;
+  }
+}
+
+const captureArea = CaptureArea.init();
+
+const getVideoPosition = () => {
+  if (captureArea.isEnabled) {
+    return captureArea.getBoundingClientRect();
+  }
+
+  const videoElement = getVideoElement();
+  return videoElement.getBoundingClientRect();
+};
+
+const showCaptureAreaIfNoVideo = () => {
+  if (!getVideoElement()) {
+    captureArea.enable();
+  }
 };
 
 const handleMessage = async (message, sendResponse) => {
   try {
     switch (message.action) {
       case GET_VIDEO_POSITION_DATA:
+        console.log('fired ss');
         sendResponse(getVideoPosition());
         break;
       case SHOW_CAPTURE_AREA:
-        showCaptureArea();
+        captureArea.enable();
         sendResponse({ success: true });
         break;
       case GET_SCREEN_WIDTH:
         sendResponse({ screenWidth: window.screen.availWidth });
         break;
+      case SHOW_CAPTURE_AREA_IF_NO_VIDEO:
+        showCaptureAreaIfNoVideo();
+        sendResponse({ success: true });
+        break;
       default:
         break;
     }
   } catch (err) {
-    console.error(err.message);
     sendAlert(NOTION_ERR_MESSAGE);
     chrome.storage.local.clear();
+    throw err;
   }
 };
 
 const recorder = () => {
-  drawCaptureArea();
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sendResponse);
     return true;

@@ -1,11 +1,11 @@
-const getActiveTabs = () => {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.query(
-      { active: true, currentWindow: true },
-      chromeCallbackHandler(resolve, reject)
-    );
-  });
-};
+/* eslint-disable no-console */
+/* eslint-disable no-undef */
+const getActiveTabs = () => new Promise((resolve, reject) => {
+  chrome.tabs.query(
+    { active: true, currentWindow: true },
+    chromeCallbackHandler(resolve, reject),
+  );
+});
 
 /**
  * Resize notion window if it exist, else create a new notion window
@@ -26,7 +26,7 @@ const resizeOrCreateNotionWindow = async (width) => {
   await chrome.windows.create({
     url: NOTION_URL,
     left: width,
-    width: width,
+    width,
   });
 };
 
@@ -48,11 +48,10 @@ const handleSeparateWindow = async (activeTab) => {
   }
 };
 
-const handleTakeNotes = async (event) => {
+const handleTakeNotes = async () => {
   try {
     const tabs = await getActiveTabs();
     const activeTab = tabs[0];
-    const activeWindowID = activeTab.windowId;
 
     await setLocalStorageData({
       videoURL: activeTab.url,
@@ -60,6 +59,10 @@ const handleTakeNotes = async (event) => {
     });
 
     await handleSeparateWindow(activeTab);
+    await chromeSendRuntimeMessage({
+      action: SHOW_CAPTURE_AREA_IF_NO_VIDEO,
+      tabID: activeTab.id,
+    });
     window.close();
   } catch (err) {
     sendAlert(NOTION_ERR_MESSAGE);

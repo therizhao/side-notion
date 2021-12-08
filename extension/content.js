@@ -1,10 +1,13 @@
+/* eslint-disable no-console */
+/* eslint-disable no-undef */
+
 /**
  *
  * @param {string} activeWindowID to take video screenshot from
  * @param {boolean} isSameWindow true iff video frame is in same window
  * @returns {Promise<string>} dataURI of screenshot
  */
-const takeScreenshot = async (activeWindowID, isSameWindow) => {
+const takeScreenshot = async (activeWindowID) => {
   const { dataURI, videoPositionData } = await chromeSendRuntimeMessage({
     action: TAKE_SCREEN_SHOT,
     activeWindowID,
@@ -25,13 +28,9 @@ const copyBlobToClipboard = (blob) => {
   return navigator.clipboard.write([clipboardItem]);
 };
 
-const getNotionScroller = () => {
-  return document.querySelector('div.notion-scroller.vertical.horizontal');
-};
+const getNotionScroller = () => document.querySelector('div.notion-scroller.vertical.horizontal');
 
-const getNotionScrollHeight = () => {
-  return getNotionScroller().scrollTop;
-};
+const getNotionScrollHeight = () => getNotionScroller().scrollTop;
 
 const scrollToPositionNotion = (scrollTop) => {
   const notionScroller = getNotionScroller();
@@ -70,10 +69,11 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
   try {
     // cmd + shift + ,
     if (
-      (event.metaKey || event.ctrlKey) &&
-      event.shiftKey &&
-      event.key === ','
+      (event.metaKey || event.ctrlKey)
+      && event.shiftKey
+      && event.key === ','
     ) {
+      console.log('fired ss');
       const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
       pasteToNotion(imageBlob);
@@ -82,9 +82,9 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
 
     // cmd + shift + k
     if (
-      (event.metaKey || event.ctrlKey) &&
-      event.shiftKey &&
-      event.key === 'k'
+      (event.metaKey || event.ctrlKey)
+      && event.shiftKey
+      && event.key === 'k'
     ) {
       await chromeSendRuntimeMessage({
         action: SHOW_CAPTURE_AREA,
@@ -93,9 +93,9 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       return;
     }
   } catch (err) {
-    console.error(err.message);
     sendAlert(NOTION_ERR_MESSAGE);
     chrome.storage.local.clear();
+    throw err;
   }
 };
 
@@ -153,8 +153,8 @@ const showUsageHint = (usageHints) => {
       }
 
       ${
-        bodyElement.classList.contains('dark')
-          ? `
+  bodyElement.classList.contains('dark')
+    ? `
         .usage-hint {
           background: rgb(63, 68, 71);
           box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 3px 6px, rgb(15 15 15 / 40%) 0px 9px 24px;
@@ -168,8 +168,8 @@ const showUsageHint = (usageHints) => {
           color: rgba(255, 255, 255, 0.9);
         }
       `
-          : ''
-      }
+    : ''
+}
     `);
 
     const childContainer = document.createElement('div');
@@ -199,10 +199,7 @@ const showUsageHint = (usageHints) => {
 
 const addListener = async () => {
   try {
-    const { videoURL, activeWindowID } = await getLocalStorageData([
-      'videoURL',
-      'activeWindowID',
-    ]);
+    const { activeWindowID } = await getLocalStorageData(['activeWindowID']);
 
     addKeydownListener(activeWindowID, false);
     showUsageHint([
@@ -210,8 +207,8 @@ const addListener = async () => {
       { label: 'Edit area', cmd: `${cmdKey}+shift+k` },
     ]);
   } catch (err) {
-    console.error(err.message);
     sendAlert(NOTION_ERR_MESSAGE);
+    throw err;
   }
 };
 

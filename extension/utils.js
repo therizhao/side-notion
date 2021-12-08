@@ -1,46 +1,40 @@
+/* eslint-disable no-alert */
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+
 // CHROME UTILS
 
-const chromeCallbackHandler = (resolve, reject) => {
-  return (response) => {
-    if (chrome.runtime.lastError) {
-      return reject(chrome.runtime.lastError);
-    }
-    return resolve(response);
-  };
+const chromeCallbackHandler = (resolve, reject) => (response) => {
+  if (chrome.runtime.lastError) {
+    return reject(chrome.runtime.lastError);
+  }
+  return resolve(response);
 };
 
 /**
  *
  * @param {string[]} keys
  */
-const getLocalStorageData = (keys) => {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get(keys, chromeCallbackHandler(resolve, reject));
-  });
-};
+const getLocalStorageData = (keys) => new Promise((resolve, reject) => {
+  chrome.storage.local.get(keys, chromeCallbackHandler(resolve, reject));
+});
 
 /**
  *
  * @param {Object} data
  */
-const setLocalStorageData = (data) => {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set(data, chromeCallbackHandler(resolve, reject));
-  });
-};
+const setLocalStorageData = (data) => new Promise((resolve, reject) => {
+  chrome.storage.local.set(data, chromeCallbackHandler(resolve, reject));
+});
 
-const chromeSendRuntimeMessage = (message) => {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, chromeCallbackHandler(resolve, reject));
-  });
-};
+const chromeSendRuntimeMessage = (message) => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage(message, chromeCallbackHandler(resolve, reject));
+});
 
 /**
  * @returns {boolean} true iff is iframe created by sidenotion
  */
-const getVideoURL = () => {
-  return getLocalStorageData(['videoURL']);
-};
+const getVideoURL = () => getLocalStorageData(['videoURL']);
 
 // GENERAL UTILS
 
@@ -52,24 +46,24 @@ const getVideoURL = () => {
 const dataURItoBlob = (dataURI) => {
   // convert base64 to raw binary data held in a string
   // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-  let byteString = atob(dataURI.split(',')[1]);
+  const byteString = atob(dataURI.split(',')[1]);
 
   // separate out the mime component
-  let mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
 
   // write the bytes of the string to an ArrayBuffer
-  let ab = new ArrayBuffer(byteString.length);
+  const ab = new ArrayBuffer(byteString.length);
 
   // create a view into the buffer
-  let ia = new Uint8Array(ab);
+  const ia = new Uint8Array(ab);
 
   // set the bytes of the buffer to the correct values
-  for (let i = 0; i < byteString.length; i++) {
+  for (let i = 0; i < byteString.length; i += 1) {
     ia[i] = byteString.charCodeAt(i);
   }
 
   // write the ArrayBuffer to a blob, and you're done
-  let blob = new Blob([ab], { type: mimeString });
+  const blob = new Blob([ab], { type: mimeString });
   return blob;
 };
 
@@ -83,6 +77,8 @@ const cropImage = (dataURI, positionData) => {
   const height = Math.ceil(scale * positionData.height);
 
   return new Promise((resolve) => {
+    console.log(x, y, width, height);
+
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -119,9 +115,7 @@ const getBodyElement = () => {
  *
  * @returns {HTMLVideoElement}
  */
-const getVideoElement = () => {
-  return document.documentElement.querySelector('video');
-};
+const getVideoElement = () => document.documentElement.querySelector('video');
 
 /**
  *
