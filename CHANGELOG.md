@@ -1,5 +1,10 @@
 # SideNotion ChangeLog
 
+## v1.2.0
+
+- Fix: Fix screen dimensions of new window
+- Chore: Package and release on chrome extension store
+
 ## v1.1.2
 
 - Fix: Fix crop image dimensions
