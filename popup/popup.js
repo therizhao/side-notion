@@ -35,12 +35,12 @@ const handleSeparateWindow = async (activeTab) => {
       tabID: activeTab.id,
     });
     const halfWidth = Math.floor(screenWidth / 2);
-
+    
+    await removeExistingAndCreateNotionWindow(halfWidth);
     await chrome.windows.update(activeTab.windowId, {
       width: halfWidth,
+      state: 'normal'
     });
-
-    await removeExistingAndCreateNotionWindow(halfWidth);
   } catch (err) {
     throw new Error('Failed to create separate window');
   }
