@@ -71,7 +71,7 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
     if (
       (event.metaKey || event.ctrlKey)
       && event.shiftKey
-      && event.key === ','
+      && event.code === 'Comma'
     ) {
       const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
@@ -83,14 +83,12 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
     if (
       (event.metaKey || event.ctrlKey)
       && event.shiftKey
-      && event.key === 'k'
+      && event.code === 'KeyK'
     ) {
-      await chromeSendRuntimeMessage(
-        {
-          action: TOGGLE_CAPTURE_AREA,
-          activeWindowID,
-        },
-      );
+      await chromeSendRuntimeMessage({
+        action: TOGGLE_CAPTURE_AREA,
+        activeWindowID,
+      });
       return;
     }
   } catch (err) {
