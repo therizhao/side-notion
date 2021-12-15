@@ -147,6 +147,11 @@ const getVideoPosition = () => {
   }
 
   const videoElement = getVideoElement();
+  if (!videoElement) {
+    captureArea.enable();
+    return getVideoPosition();
+  }
+
   return boundingRectToDimensions(videoElement.getBoundingClientRect());
 };
 
@@ -167,7 +172,10 @@ const handleMessage = async (message, sendResponse) => {
         sendResponse({ success: true });
         break;
       case GET_SCREEN_DIMENSIONS:
-        sendResponse({ screenWidth: window.screen.availWidth, screenHeight: window.screen.availHeight });
+        sendResponse({
+          screenWidth: window.screen.availWidth,
+          screenHeight: window.screen.availHeight,
+        });
         break;
       case SHOW_CAPTURE_AREA_IF_NO_VIDEO:
         showCaptureAreaIfNoVideo();
