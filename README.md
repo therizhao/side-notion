@@ -1,5 +1,30 @@
 # SideNotion: Turn Notion into your online lecture sidekick
 
+## How to use?
+
+[![How to use SideNotion](images/readme/how-to-use.png)](https://www.youtube.com/watch?v=VlyQVYS2Y20)
+
+## How to install?
+
+### Latest Version
+
+This repository will always be the latest version.
+
+1. Download the folder `extension`
+2. Load unpacked the folder in chrome://extensions page
+
+[Step by step video tutorial](https://www.loom.com/share/00aaee56a5fc4548a8143811c91827c5)
+
+### Chrome Extension Store
+
+> Note the version may not be the latest one (Have to wait for chrome moderators to approve)
+
+Download it here
+
+https://chrome.google.com/webstore/detail/sidenotion/ihjmeedcmbeapmaagcjpngemnckiooih
+
+# Appendix
+
 - Blog: https://30apps.me/build-01-sidenotion
 - #1 Product of the day on ProductHunt: https://www.producthunt.com/posts/sidenotion
 - Part of the [30 apps in 30 days project](https://www.30apps.me)
