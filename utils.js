@@ -15,21 +15,24 @@ const chromeCallbackHandler = (resolve, reject) => (response) => {
  *
  * @param {string[]} keys
  */
-const getLocalStorageData = (keys) => new Promise((resolve, reject) => {
-  chrome.storage.local.get(keys, chromeCallbackHandler(resolve, reject));
-});
+const getLocalStorageData = (keys) =>
+  new Promise((resolve, reject) => {
+    chrome.storage.local.get(keys, chromeCallbackHandler(resolve, reject));
+  });
 
 /**
  *
  * @param {Object} data
  */
-const setLocalStorageData = (data) => new Promise((resolve, reject) => {
-  chrome.storage.local.set(data, chromeCallbackHandler(resolve, reject));
-});
+const setLocalStorageData = (data) =>
+  new Promise((resolve, reject) => {
+    chrome.storage.local.set(data, chromeCallbackHandler(resolve, reject));
+  });
 
-const chromeSendRuntimeMessage = (message) => new Promise((resolve, reject) => {
-  chrome.runtime.sendMessage(message, chromeCallbackHandler(resolve, reject));
-});
+const chromeSendRuntimeMessage = (message) =>
+  new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(message, chromeCallbackHandler(resolve, reject));
+  });
 
 /**
  * @returns {boolean} true iff is iframe created by sidenotion
@@ -70,11 +73,7 @@ const dataURItoBlob = (dataURI) => {
 // DOM UTILS
 
 const cropImage = (dataURI, positionData) => {
-  const scale = window.devicePixelRatio;
-  const x = Math.ceil(scale * positionData.x);
-  const y = Math.ceil(scale * positionData.y);
-  const width = Math.ceil(scale * positionData.width);
-  const height = Math.ceil(scale * positionData.height);
+  const { x, y, width, height } = positionData;
 
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');

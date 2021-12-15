@@ -116,25 +116,38 @@ class CaptureArea {
     this.isHidden = true;
   }
 
-  getBoundingClientRect() {
+  getDimensions() {
     const captureAreaRect = this.captureAreaElement.getBoundingClientRect();
     captureAreaRect.width -= 10;
     captureAreaRect.height -= 10;
     captureAreaRect.x += 5;
     captureAreaRect.y += 5;
-    return captureAreaRect;
+    return boundingRectToDimensions(captureAreaRect);
   }
 }
+
+/**
+ *
+ * @param {DOMRect} boundingRect
+ */
+const boundingRectToDimensions = (boundingRect) => {
+  return {
+    x: Math.ceil(boundingRect.x * window.devicePixelRatio),
+    y: Math.ceil(boundingRect.y * window.devicePixelRatio),
+    width: Math.ceil(boundingRect.width * window.devicePixelRatio),
+    height: Math.ceil(boundingRect.height * window.devicePixelRatio),
+  };
+};
 
 const captureArea = CaptureArea.init();
 
 const getVideoPosition = () => {
   if (captureArea.isEnabled) {
-    return captureArea.getBoundingClientRect();
+    return captureArea.getDimensions();
   }
 
   const videoElement = getVideoElement();
-  return videoElement.getBoundingClientRect();
+  return boundingRectToDimensions(videoElement.getBoundingClientRect());
 };
 
 const showCaptureAreaIfNoVideo = () => {

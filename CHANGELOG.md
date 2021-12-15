@@ -1,5 +1,9 @@
 # SideNotion ChangeLog
 
+## v1.1.2
+
+- Fix: Fix crop image dimensions
+
 ## v1.1.1
 
 - Fix: Fix keycode
