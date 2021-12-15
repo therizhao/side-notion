@@ -10,7 +10,7 @@
 
 This repository will always be the latest version.
 
-1. Download the folder `extension`
+1. Download this repository
 2. Load unpacked the folder in chrome://extensions page
 
 [Step by step video tutorial](https://www.loom.com/share/00aaee56a5fc4548a8143811c91827c5)

@@ -8,12 +8,10 @@ const getActiveTabs = () => new Promise((resolve, reject) => {
 });
 
 /**
- * Resize notion window if it exist, else create a new notion window
- * Ensures that there is always only one notion window
- * STATUS: Commented out resize
+ * Remove all notion tabs and create new notion window
  * @param {number} width
  */
-const resizeOrCreateNotionWindow = async (width) => {
+const removeExistingAndCreateNotionWindow = async (width) => {
   // Get tabs with notion url that is not current window
   const tabs = await chrome.tabs.query({
     url: `${NOTION_URL}/*`,
@@ -42,7 +40,7 @@ const handleSeparateWindow = async (activeTab) => {
       width: halfWidth,
     });
 
-    await resizeOrCreateNotionWindow(halfWidth);
+    await removeExistingAndCreateNotionWindow(halfWidth);
   } catch (err) {
     throw new Error('Failed to create separate window');
   }
