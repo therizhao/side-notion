@@ -95,10 +95,10 @@ class CaptureArea {
       this.captureAreaElement.style.width = `${videoPosition.width}px`;
       this.captureAreaElement.style.height = `${videoPosition.height}px`;
     } else {
-      this.captureAreaElement.style.left = '200px';
-      this.captureAreaElement.style.top = '200px';
-      this.captureAreaElement.style.width = '600px';
-      this.captureAreaElement.style.height = '400px';
+      this.captureAreaElement.style.left = '100px';
+      this.captureAreaElement.style.top = '100px';
+      this.captureAreaElement.style.width = '300px';
+      this.captureAreaElement.style.height = '200px';
     }
 
     this.isEnabled = true;
@@ -166,8 +166,8 @@ const handleMessage = async (message, sendResponse) => {
         captureArea.toggle();
         sendResponse({ success: true });
         break;
-      case GET_SCREEN_WIDTH:
-        sendResponse({ screenWidth: window.screen.availWidth });
+      case GET_SCREEN_DIMENSIONS:
+        sendResponse({ screenWidth: window.screen.availWidth, screenHeight: window.screen.availHeight });
         break;
       case SHOW_CAPTURE_AREA_IF_NO_VIDEO:
         showCaptureAreaIfNoVideo();

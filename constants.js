@@ -5,7 +5,7 @@ const TAKE_SCREEN_SHOT = 'TAKE_SCREEN_SHOT';
 const GET_VIDEO_POSITION_DATA = 'GET_VIDEO_POSITION_DATA';
 const TOGGLE_CAPTURE_AREA = 'TOGGLE_CAPTURE_AREA';
 // Get screen width (screen width should only be obtained from content script not popup)
-const GET_SCREEN_WIDTH = 'GET_SCREEN_WIDTH';
+const GET_SCREEN_DIMENSIONS = 'GET_SCREEN_DIMENSIONS';
 const SHOW_CAPTURE_AREA_IF_NO_VIDEO = 'SHOW_CAPTURE_AREA_IF_NO_VIDEO';
 
 const NOTION_ERR_MESSAGE = `Error 😢. Try 

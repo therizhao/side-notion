@@ -46,7 +46,7 @@ const messageHandler = async (request, sender, sendResponse) => {
         sendResponse({ dataURI: screenShotDataURI, videoPositionData });
         break;
       }
-      case GET_SCREEN_WIDTH: {
+      case GET_SCREEN_DIMENSIONS: {
         const data = await sendTabsMessage(request.tabID, {
           action: request.action,
         });

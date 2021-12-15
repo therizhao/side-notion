@@ -1,17 +1,19 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
-const getActiveTabs = () => new Promise((resolve, reject) => {
-  chrome.tabs.query(
-    { active: true, currentWindow: true },
-    chromeCallbackHandler(resolve, reject),
-  );
-});
+const getActiveTabs = () =>
+  new Promise((resolve, reject) => {
+    chrome.tabs.query(
+      { active: true, currentWindow: true },
+      chromeCallbackHandler(resolve, reject)
+    );
+  });
 
 /**
  * Remove all notion tabs and create new notion window
  * @param {number} width
+ * @param {number} height
  */
-const removeExistingAndCreateNotionWindow = async (width) => {
+const removeExistingAndCreateNotionWindow = async (width, height) => {
   // Get tabs with notion url that is not current window
   const tabs = await chrome.tabs.query({
     url: `${NOTION_URL}/*`,
@@ -24,22 +26,25 @@ const removeExistingAndCreateNotionWindow = async (width) => {
   await chrome.windows.create({
     url: NOTION_URL,
     left: width,
+    state: 'normal',
     width,
+    height,
   });
 };
 
 const handleSeparateWindow = async (activeTab) => {
   try {
-    const { screenWidth } = await chromeSendRuntimeMessage({
-      action: GET_SCREEN_WIDTH,
+    const { screenWidth, screenHeight } = await chromeSendRuntimeMessage({
+      action: GET_SCREEN_DIMENSIONS,
       tabID: activeTab.id,
     });
     const halfWidth = Math.floor(screenWidth / 2);
-    
-    await removeExistingAndCreateNotionWindow(halfWidth);
+
+    await removeExistingAndCreateNotionWindow(halfWidth, screenHeight);
     await chrome.windows.update(activeTab.windowId, {
       width: halfWidth,
-      state: 'normal'
+      height: screenHeight,
+      state: 'normal',
     });
   } catch (err) {
     throw new Error('Failed to create separate window');
