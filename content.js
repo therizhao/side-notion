@@ -28,7 +28,8 @@ const copyBlobToClipboard = (blob) => {
   return navigator.clipboard.write([clipboardItem]);
 };
 
-const getNotionScroller = () => document.querySelector('div.notion-scroller.vertical.horizontal');
+const getNotionScroller = () =>
+  document.querySelector('div.notion-scroller.vertical.horizontal');
 
 const getNotionScrollHeight = () => getNotionScroller().scrollTop;
 
@@ -69,9 +70,10 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
   try {
     // cmd + shift + ,
     if (
-      (event.metaKey || event.ctrlKey)
-      && event.shiftKey
-      && event.code === 'Comma'
+      (event.metaKey || event.ctrlKey) &&
+      event.shiftKey &&
+      // Event.key support for AZERTY keyboard
+      (event.code === 'Comma' || event.key === ',')
     ) {
       const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
@@ -81,9 +83,10 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
 
     // cmd + shift + k
     if (
-      (event.metaKey || event.ctrlKey)
-      && event.shiftKey
-      && event.code === 'KeyK'
+      (event.metaKey || event.ctrlKey) &&
+      event.shiftKey &&
+      // Event.key support for AZERTY keyboard
+      (event.code === 'KeyK' || event.key.toUpperCase() === 'K')
     ) {
       await chromeSendRuntimeMessage({
         action: TOGGLE_CAPTURE_AREA,
@@ -152,8 +155,8 @@ const showUsageHint = (usageHints) => {
       }
 
       ${
-  bodyElement.classList.contains('dark')
-    ? `
+        bodyElement.classList.contains('dark')
+          ? `
         .usage-hint {
           background: rgb(63, 68, 71);
           box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 3px 6px, rgb(15 15 15 / 40%) 0px 9px 24px;
@@ -167,8 +170,8 @@ const showUsageHint = (usageHints) => {
           color: rgba(255, 255, 255, 0.9);
         }
       `
-    : ''
-}
+          : ''
+      }
     `);
 
     const childContainer = document.createElement('div');

@@ -1,5 +1,9 @@
 # SideNotion ChangeLog
 
+## v1.2.1
+
+- Fix: Support AZERTY keyboard
+
 ## v1.2.0
 
 - Fix: Fix screen dimensions of new window

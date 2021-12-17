@@ -28,5 +28,5 @@
   "permissions": ["activeTab", "tabs", "storage", "clipboardRead"],
   "host_permissions": ["<all_urls>"],
   "short_name": "SideNotion",
-  "version": "1.2.0"
+  "version": "1.2.1"
 }
