@@ -2,6 +2,17 @@
 /* eslint-disable no-undef */
 
 /**
+ *
+ * @param {DOMRect} boundingRect
+ */
+const boundingRectToDimensions = (boundingRect) => ({
+  x: Math.ceil(boundingRect.x * window.devicePixelRatio),
+  y: Math.ceil(boundingRect.y * window.devicePixelRatio),
+  width: Math.ceil(boundingRect.width * window.devicePixelRatio),
+  height: Math.ceil(boundingRect.height * window.devicePixelRatio),
+});
+
+/**
  * Singleton class
  */
 class CaptureArea {
@@ -125,19 +136,6 @@ class CaptureArea {
     return boundingRectToDimensions(captureAreaRect);
   }
 }
-
-/**
- *
- * @param {DOMRect} boundingRect
- */
-const boundingRectToDimensions = (boundingRect) => {
-  return {
-    x: Math.ceil(boundingRect.x * window.devicePixelRatio),
-    y: Math.ceil(boundingRect.y * window.devicePixelRatio),
-    width: Math.ceil(boundingRect.width * window.devicePixelRatio),
-    height: Math.ceil(boundingRect.height * window.devicePixelRatio),
-  };
-};
 
 const captureArea = CaptureArea.init();
 

@@ -11,7 +11,8 @@
       "all_frames": true
     },
     {
-      "js": ["utils.js", "content.js"],
+      "js": ["utils.js", "packages/intro.js", "content.js"],
+      "css": ["packages/intro.css"],
       "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
     }
   ],

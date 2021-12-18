@@ -1,12 +1,16 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
-const getActiveTabs = () =>
-  new Promise((resolve, reject) => {
-    chrome.tabs.query(
-      { active: true, currentWindow: true },
-      chromeCallbackHandler(resolve, reject)
-    );
-  });
+const getActiveTabs = () => new Promise((resolve, reject) => {
+  chrome.tabs.query(
+    { active: true, currentWindow: true },
+    chromeCallbackHandler(resolve, reject),
+  );
+});
+
+const getActiveTab = async () => {
+  const tabs = await getActiveTabs();
+  return tabs[0];
+};
 
 /**
  * Remove all notion tabs and create new notion window
@@ -51,11 +55,8 @@ const handleSeparateWindow = async (activeTab) => {
   }
 };
 
-const handleTakeNotes = async () => {
+const handleTakeNotes = async (event, activeTab) => {
   try {
-    const tabs = await getActiveTabs();
-    const activeTab = tabs[0];
-
     await setLocalStorageData({
       videoURL: activeTab.url,
       activeWindowID: activeTab.windowId,
@@ -74,12 +75,32 @@ const handleTakeNotes = async () => {
   }
 };
 
-const main = () => {
+const disableTakesNotes = () => {
+  const takeNotesButton = document.getElementById('take-notes-button');
+  takeNotesButton.style.background = 'rgb(192 192 192)';
+
+  const takesNotesButtonHint = document.createElement('p');
+  takesNotesButtonHint.id = 'take-notes-button-hint';
+  // Can show tutorial video here
+  takesNotesButtonHint.textContent = 'Click the button only on a website where you want to take screenshots from';
+
+  takeNotesButton.parentNode.insertBefore(takesNotesButtonHint, takeNotesButton.nextElementSibling);
+};
+
+const main = async () => {
+  document.getElementById('how-to-use-button').href = HOW_TO_USE_URL;
   document.getElementById('feedback-button').href = FEEDBACK_URL;
   document.getElementById('rate-button').href = REVIEW_URL;
+
+  const activeTab = await getActiveTab();
+  if (activeTab.url.includes(NOTION_URL)) {
+    disableTakesNotes();
+    return;
+  }
+
   document
     .getElementById('take-notes-button')
-    .addEventListener('click', (event) => handleTakeNotes(event));
+    .addEventListener('click', (event) => handleTakeNotes(event, activeTab));
 };
 
 main();

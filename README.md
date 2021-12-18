@@ -31,6 +31,13 @@ https://chrome.google.com/webstore/detail/sidenotion/ihjmeedcmbeapmaagcjpngemnck
 
 <a href="https://www.producthunt.com/posts/sidenotion?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-sidenotion" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=318643&theme=light&period=daily" alt="SideNotion - Turn Notion into your online lecture sidekick | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
+## How to package to Chrome Web Store?
+
+1. Choose all files and folders except for `misc`, `package.json` and `package-lock.json`
+2. Compress the chosen files and folders
+3. Rename the zip file to the version number and move it to misc/packages
+4. Upload the zip file to Chrome Web Store
+
 **Want to build SideNotion together?**
 
 - Contact me on Telegram [t.me/rizhaow](https://t.me/rizhaow)

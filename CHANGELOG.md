@@ -1,5 +1,12 @@
 # SideNotion ChangeLog
 
+## v1.3.0-alpha
+
+todo: disable tutorial after first time
+
+- Feat: Add onboarding tutorial
+- Feat: Disable `Start taking notes` button on Notion window
+
 ## v1.2.1
 
 - Fix: Support AZERTY keyboard

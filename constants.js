@@ -13,5 +13,11 @@ const NOTION_ERR_MESSAGE = `Error 😢. Try
   2️⃣ Start a new notetaking session`;
 
 const CAPTURE_AREA_ID = 'capture-area';
+const HOW_TO_USE_URL = 'https://www.youtube.com/watch?v=VlyQVYS2Y20';
 const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdq6KtGZKvPLN2KBaxyw3D37PidA9EBFAfYUtaR7Vq8mGuZdQ/viewform?usp=sf_link';
 const REVIEW_URL = 'https://chrome.google.com/webstore/detail/sidenotion/ihjmeedcmbeapmaagcjpngemnckiooih/reviews';
+
+const USAGE_HINT_CONTAINER_ID = 'usage-hint-container';
+const CAPTURE_HINT_ID = 'capture-hint';
+const TUTORIAL_HINT_ID = 'tutorial-hint';
+const TOGGLE_CAPTURE_AREA_HINT_ID = 'toggle-capture-area-hint';
