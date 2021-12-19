@@ -156,15 +156,6 @@ const sendAlert = (message) => {
   alert(message);
 };
 
-const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-
-const cmdKey = isMac ? 'cmd' : 'ctrl';
-
-const CAPTURE_CMD = `${cmdKey}+shift+,`;
-const PLAY_PAUSE_CMD = `${cmdKey}+shift+.`;
-const SHOW_HIDE_AREA_CMD = `${cmdKey}+shift+k`;
-const SHOW_TUTORIAL_CMD = `${cmdKey}+shift+h`;
-
 const isYoutube = () => window.location.hostname.includes('youtube.com');
 const isZoom = () => window.location.hostname.includes('zoom.us');
 
@@ -176,3 +167,28 @@ const isZoom = () => window.location.hostname.includes('zoom.us');
 const wait = (ms) => new Promise((resolve) => {
   setTimeout(resolve, ms);
 });
+
+/**
+ *
+ * @param {KeyboardEvent} event
+ * @param {string} matchCode
+ * @param {string} matchKey should always be lowercase
+ * @returns {boolean} true iff matches key and code
+ * See here for event key and code https://keycode.info/
+ */
+const isCmdShiftKey = (event, matchCode, matchKey) => (event.metaKey || event.ctrlKey)
+  && event.shiftKey
+  // Event.key support for AZERTY keyboard
+  && (event.code === matchCode || event.key.toLowerCase() === matchKey);
+
+/**
+ *
+ * @param {Element} element
+ */
+const flashHighlightElement = (element) => {
+  element.style.transition = 'box-shadow 0.2s';
+  element.style.boxShadow = '0 0 0 2px rgb(55, 53, 47)';
+  setTimeout(() => {
+    element.style.boxShadow = 'none';
+  }, 1000);
+};

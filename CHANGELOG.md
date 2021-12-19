@@ -8,6 +8,8 @@
 - Feat: Hide youtube/zoom controls when window not in focus
 - Feat: Play/Pause video
 - Feat: Create new line after pasting screenshot
+- Feat: Fast forward backward video
+- Feat: Show highlighted cmd
 
 ## v1.2.1
 

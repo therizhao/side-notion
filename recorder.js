@@ -103,8 +103,8 @@ class CaptureArea {
     const videoElement = getVideoElement();
     if (videoElement) {
       const videoPosition = videoElement.getBoundingClientRect();
-      this.captureAreaElement.style.left = `${videoPosition.left}px`;
-      this.captureAreaElement.style.top = `${videoPosition.top}px`;
+      this.captureAreaElement.style.left = `${videoPosition.left - 10}px`;
+      this.captureAreaElement.style.top = `${videoPosition.top - 10}px`;
       this.captureAreaElement.style.width = `${videoPosition.width}px`;
       this.captureAreaElement.style.height = `${videoPosition.height}px`;
     } else {
@@ -238,6 +238,56 @@ const hideVideoControls = () => {
   // If not above (add more later)
 };
 
+const flashVideoControls = () => {
+  showVideoControls();
+  setTimeout(() => {
+    hideVideoControls();
+  }, 1000);
+};
+
+const skip5s = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    sendAlert("There's no video to skip 5s");
+    return;
+  }
+
+  flashVideoControls();
+  if (isYoutube()) {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        keyCode: 39,
+        code: 'ArrowRight',
+      }),
+    );
+  } else {
+    videoElement.currentTime += 5;
+  }
+};
+
+const back5s = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    sendAlert("There's no video to back 5s");
+    return;
+  }
+
+  flashVideoControls();
+
+  if (isYoutube()) {
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowLeft',
+        keyCode: 37,
+        code: 'ArrowLeft',
+      }),
+    );
+  } else {
+    videoElement.currentTime -= 5;
+  }
+};
+
 const handleMessage = async (message, sendResponse) => {
   try {
     switch (message.action) {
@@ -269,6 +319,16 @@ const handleMessage = async (message, sendResponse) => {
         break;
       case PLAY_PAUSE_VIDEO: {
         playPauseVideo();
+        sendResponse({ success: true });
+        break;
+      }
+      case SKIP_5S: {
+        skip5s();
+        sendResponse({ success: true });
+        break;
+      }
+      case BACK_5S: {
+        back5s();
         sendResponse({ success: true });
         break;
       }
