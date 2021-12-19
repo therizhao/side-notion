@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-alert */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
@@ -115,6 +117,39 @@ const getVideoElement = () => document.documentElement.querySelector('video');
 
 /**
  *
+ * @param {HTMLVideoElement} videoElement
+ * @returns {boolean} true iff video is playing
+ * Source: https://stackoverflow.com/questions/6877403/how-to-tell-if-a-video-element-is-currently-playing
+ */
+const isVideoPlaying = (videoElement) => !!(
+  videoElement.currentTime > 0
+    && !videoElement.paused
+    && !videoElement.ended
+    && videoElement.readyState > 2
+);
+
+/**
+ *
+ * @param {Element} element
+ */
+const hideElementIfExist = (element) => {
+  if (element) {
+    element.style.visibility = 'hidden';
+  }
+};
+
+/**
+ *
+ * @param {Element} element
+ */
+const showElementIfExist = (element) => {
+  if (element) {
+    element.style.visibility = 'visible';
+  }
+};
+
+/**
+ *
  * @param {string} message
  */
 const sendAlert = (message) => {
@@ -124,3 +159,20 @@ const sendAlert = (message) => {
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
 const cmdKey = isMac ? 'cmd' : 'ctrl';
+
+const CAPTURE_CMD = `${cmdKey}+shift+,`;
+const PLAY_PAUSE_CMD = `${cmdKey}+shift+.`;
+const SHOW_HIDE_AREA_CMD = `${cmdKey}+shift+k`;
+const SHOW_TUTORIAL_CMD = `${cmdKey}+shift+h`;
+
+const isYoutube = () => window.location.hostname.includes('youtube.com');
+const isZoom = () => window.location.hostname.includes('zoom.us');
+
+/**
+ *
+ * @param {number} ms number of ms to wait for
+ * @returns {Promise<void>}
+ */
+const wait = (ms) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});

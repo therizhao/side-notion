@@ -2,10 +2,12 @@
 
 ## v1.3.0-alpha
 
-todo: disable tutorial after first time
-
 - Feat: Add onboarding tutorial
 - Feat: Disable `Start taking notes` button on Notion window
+- Feat: Disable tutorial after first time
+- Feat: Hide youtube/zoom controls when window not in focus
+- Feat: Play/Pause video
+- Feat: Create new line after pasting screenshot
 
 ## v1.2.1
 

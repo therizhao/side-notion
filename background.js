@@ -27,21 +27,16 @@ const getActiveTab = async (activeWindowID) => {
   return tabs[0];
 };
 
-const getActiveTabVideoPositionData = async (activeWindowID) => {
-  const tab = await getActiveTab(activeWindowID);
-
-  return sendTabsMessage(tab.id, {
-    action: GET_VIDEO_POSITION_DATA,
-  });
-};
-
 const messageHandler = async (request, sender, sendResponse) => {
   try {
     switch (request.action) {
       case TAKE_SCREEN_SHOT: {
+        const tab = await getActiveTab(request.activeWindowID);
         const [screenShotDataURI, videoPositionData] = await Promise.all([
           screenCapture(request.activeWindowID),
-          getActiveTabVideoPositionData(request.activeWindowID),
+          sendTabsMessage(tab.id, {
+            action: GET_VIDEO_POSITION_DATA,
+          }),
         ]);
         sendResponse({ dataURI: screenShotDataURI, videoPositionData });
         break;
@@ -53,19 +48,21 @@ const messageHandler = async (request, sender, sendResponse) => {
         sendResponse({ screenWidth: data.screenWidth });
         break;
       }
-      case TOGGLE_CAPTURE_AREA: {
-        const activeTab = await getActiveTab(request.activeWindowID);
-        const response = await sendTabsMessage(activeTab.id, {
-          action: request.action,
-        });
-        sendResponse(response);
-        break;
-      }
       case SHOW_CAPTURE_AREA_IF_NO_VIDEO: {
         await sendTabsMessage(request.tabID, {
           action: request.action,
         });
         sendResponse({ success: true });
+        break;
+      }
+      case TOGGLE_SHOW_HIDE_CAPTURE_AREA:
+      case DISABLE_CAPTURE_AREA:
+      case PLAY_PAUSE_VIDEO: {
+        const activeTab = await getActiveTab(request.activeWindowID);
+        const response = await sendTabsMessage(activeTab.id, {
+          action: request.action,
+        });
+        sendResponse(response);
         break;
       }
       default:

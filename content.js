@@ -3,7 +3,7 @@
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
-const startTutorial = () => {
+const showTutorial = (activeWindowID) => {
   addCustomStyles(
     `
       .introjs-overlay {
@@ -27,13 +27,11 @@ const startTutorial = () => {
     },
     {
       element: document.getElementById(CAPTURE_HINT_ID),
-      intro:
-        'Click on the Notion doc to focus. Try capturing a screenshot by entering cmd+shift+,',
+      intro: `Click on the Notion doc to focus. Try capturing a screenshot by entering ${CAPTURE_CMD}`,
     },
     {
-      element: document.getElementById(TOGGLE_CAPTURE_AREA_HINT_ID),
-      intro:
-        'Wonderful! Now try showing the capture area by entering cmd+shift+k',
+      element: document.getElementById(SHOW_HIDE_AREA_HINT_ID),
+      intro: `Wonderful! Now try showing the capture area by entering ${SHOW_HIDE_AREA_CMD}`,
     },
     {
       intro:
@@ -41,11 +39,11 @@ const startTutorial = () => {
     },
     {
       element: document.getElementById(CAPTURE_HINT_ID),
-      intro: 'Try capturing a screenshot again by entering cmd+shift+,', // The image captured should be that within the box area
+      intro: `Try capturing a screenshot again by entering ${CAPTURE_CMD}`, // The image captured should be that within the box area
     },
     {
-      element: document.getElementById(TOGGLE_CAPTURE_AREA_HINT_ID),
-      intro: 'Awesome! Now try hiding the capture area by entering cmd+shift+k',
+      element: document.getElementById(SHOW_HIDE_AREA_HINT_ID),
+      intro: `Awesome! Now try hiding the capture area by entering ${SHOW_HIDE_AREA_CMD}`,
     },
     {
       element: document.getElementById(CAPTURE_HINT_ID),
@@ -53,13 +51,14 @@ const startTutorial = () => {
         'When you try capturing a screenshot again the same capture area would be captured',
     },
     {
-      element: document.getElementById(TUTORIAL_HINT_ID),
-      intro:
-        "If you need to go through the tutorial again, just enter cmd+shift+m (don't fire it now, it'll restart the tutorial)",
-    },
-    {
-      intro:
-        'That’s all 🎉If you want to reset the crop area to the original video size, simply refresh this Notion window.',
+      element: document.getElementById(SHOW_TUTORIAL_HINT_ID),
+      intro: `That’s all 🎉. If you need to go through the tutorial again, just enter ${SHOW_TUTORIAL_CMD}`,
+      onchange: () => {
+        chromeSendRuntimeMessage({
+          action: DISABLE_CAPTURE_AREA,
+          activeWindowID,
+        });
+      },
     },
   ];
 
@@ -170,7 +169,27 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
     ) {
       const dataURI = await takeScreenshot(activeWindowID, isSameWindow);
       const imageBlob = dataURItoBlob(dataURI);
-      pasteToNotion(imageBlob);
+      await pasteToNotion(imageBlob);
+      // Add a string to create new block
+      await pasteToNotion(new Blob(['.'], { type: 'text/plain' }));
+      await wait(100);
+      // Enter to focus the block (needa wait to be effective)
+      const enterEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        keyCode: 13,
+        code: 'Enter',
+        bubbles: true,
+      });
+      document.activeElement.dispatchEvent(enterEvent);
+      await wait(100);
+      // Backspace to remove text (needa wait to be effective)
+      const backspaceEvent = new KeyboardEvent('keydown', {
+        key: 'Backspace',
+        code: 'Backspace',
+        bubbles: true,
+        keyCode: 8,
+      });
+      document.activeElement.dispatchEvent(backspaceEvent);
       return;
     }
 
@@ -182,20 +201,34 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       && (event.code === 'KeyK' || event.key.toUpperCase() === 'K')
     ) {
       await chromeSendRuntimeMessage({
-        action: TOGGLE_CAPTURE_AREA,
+        action: TOGGLE_SHOW_HIDE_CAPTURE_AREA,
         activeWindowID,
       });
       return;
     }
 
-    // cmd + shift + m
+    // cmd + shift + .
     if (
       (event.metaKey || event.ctrlKey)
       && event.shiftKey
       // Event.key support for AZERTY keyboard
-      && (event.code === 'KeyM' || event.key.toUpperCase() === 'M')
+      && (event.code === 'Period' || event.key === '.')
     ) {
-      startTutorial();
+      await chromeSendRuntimeMessage({
+        action: PLAY_PAUSE_VIDEO,
+        activeWindowID,
+      });
+      return;
+    }
+
+    // cmd + shift + h
+    if (
+      (event.metaKey || event.ctrlKey)
+      && event.shiftKey
+      // Event.key support for AZERTY keyboard
+      && (event.code === 'KeyH' || event.key.toUpperCase() === 'H')
+    ) {
+      showTutorial(activeWindowID);
       return;
     }
   } catch (err) {
@@ -307,27 +340,38 @@ const showUsageHint = (usageHints) => {
 
 const addListener = async () => {
   try {
-    const { activeWindowID } = await getLocalStorageData(['activeWindowID']);
+    const { activeWindowID, hasShownTutorial } = await getLocalStorageData([
+      'activeWindowID',
+      'hasShownTutorial',
+    ]);
 
     addKeydownListener(activeWindowID, false);
     showUsageHint([
       {
         label: 'Capture',
-        cmd: `${cmdKey}+shift+,`,
+        cmd: CAPTURE_CMD,
         id: CAPTURE_HINT_ID,
       },
       {
+        label: 'Play/pause',
+        cmd: PLAY_PAUSE_CMD,
+        id: PLAY_PAUSE_HINT_ID,
+      },
+      {
         label: 'Show/hide area',
-        cmd: `${cmdKey}+shift+k`,
-        id: TOGGLE_CAPTURE_AREA_HINT_ID,
+        cmd: SHOW_HIDE_AREA_CMD,
+        id: SHOW_HIDE_AREA_HINT_ID,
       },
       {
         label: 'Show tutorial',
-        cmd: `${cmdKey}+shift+m`,
-        id: TUTORIAL_HINT_ID,
+        cmd: SHOW_TUTORIAL_CMD,
+        id: SHOW_TUTORIAL_HINT_ID,
       },
     ]);
-    startTutorial();
+    if (!hasShownTutorial) {
+      showTutorial(activeWindowID);
+      await setLocalStorageData({ hasShownTutorial: true });
+    }
   } catch (err) {
     sendAlert(NOTION_ERR_MESSAGE);
     throw err;

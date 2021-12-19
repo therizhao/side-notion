@@ -79,14 +79,6 @@ class CaptureArea {
     return new CaptureArea(captureAreaElement);
   }
 
-  toggle() {
-    if (this.isEnabled) {
-      this.toggleShowHide();
-    } else {
-      this.enable();
-    }
-  }
-
   toggleShowHide() {
     if (this.isHidden) {
       this.show();
@@ -95,9 +87,19 @@ class CaptureArea {
     }
   }
 
+  /**
+   * Capture area is hidden and disabled
+   */
+  disable() {
+    this.hide();
+    this.isEnabled = false;
+  }
+
+  /**
+   * Capture area is enabled and shown
+   */
   enable() {
     this.captureAreaElement.style.display = 'block';
-    this.captureAreaElement.style.zIndex = '100000000';
     const videoElement = getVideoElement();
     if (videoElement) {
       const videoPosition = videoElement.getBoundingClientRect();
@@ -113,14 +115,21 @@ class CaptureArea {
     }
 
     this.isEnabled = true;
+    this.show();
   }
 
+  /**
+   * Capture area is shown
+   */
   show() {
     this.captureAreaElement.style.visibility = 'visible';
     this.captureAreaElement.style.zIndex = '100000000';
     this.isHidden = false;
   }
 
+  /**
+   * Capture area is hidden
+   */
   hide() {
     this.captureAreaElement.style.visibility = 'hidden';
     this.captureAreaElement.style.zIndex = '-100000000';
@@ -159,14 +168,93 @@ const showCaptureAreaIfNoVideo = () => {
   }
 };
 
+/**
+ *
+ * Plays video if video is paused
+ * Pause video if video is playing
+ * Alerts if no video element
+ */
+const playPauseVideo = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    sendAlert("There's no video to play or pause");
+    return;
+  }
+
+  if (isVideoPlaying(videoElement)) {
+    videoElement.pause();
+    return;
+  }
+
+  videoElement.play();
+};
+
+/**
+ *
+ * Show video controls iff there's a video and controls not shown
+ * Otherwise do nothing
+ */
+const showVideoControls = () => {
+  if (isYoutube()) {
+    showElementIfExist(document.querySelector('.ytp-gradient-bottom'));
+    showElementIfExist(document.querySelector('.ytp-chrome-bottom'));
+    showElementIfExist(
+      document.querySelector(
+        '#movie_player > div.ytp-player-content.ytp-iv-player-content',
+      ),
+    );
+    return;
+  }
+
+  if (isZoom()) {
+    showElementIfExist(document.querySelector('.vjs-control-bar'));
+    // Don't want show getty notice (it's useless)
+  }
+
+  // If not above (add more later)
+};
+
+/**
+ * Hide video controls iff they exist
+ * Otherwise do nothing
+ */
+const hideVideoControls = () => {
+  if (isYoutube()) {
+    hideElementIfExist(document.querySelector('.ytp-gradient-bottom'));
+    hideElementIfExist(document.querySelector('.ytp-chrome-bottom'));
+    hideElementIfExist(
+      document.querySelector(
+        '#movie_player > div.ytp-player-content.ytp-iv-player-content',
+      ),
+    );
+    return;
+  }
+
+  if (isZoom()) {
+    hideElementIfExist(document.querySelector('.vjs-control-bar'));
+    hideElementIfExist(document.querySelector('.getty-notice'));
+  }
+
+  // If not above (add more later)
+};
+
 const handleMessage = async (message, sendResponse) => {
   try {
     switch (message.action) {
       case GET_VIDEO_POSITION_DATA:
         sendResponse(getVideoPosition());
         break;
-      case TOGGLE_CAPTURE_AREA:
-        captureArea.toggle();
+      case DISABLE_CAPTURE_AREA: {
+        captureArea.disable();
+        sendResponse({ success: true });
+        break;
+      }
+      case TOGGLE_SHOW_HIDE_CAPTURE_AREA:
+        if (captureArea.isEnabled) {
+          captureArea.toggleShowHide();
+        } else {
+          captureArea.enable();
+        }
         sendResponse({ success: true });
         break;
       case GET_SCREEN_DIMENSIONS:
@@ -179,6 +267,11 @@ const handleMessage = async (message, sendResponse) => {
         showCaptureAreaIfNoVideo();
         sendResponse({ success: true });
         break;
+      case PLAY_PAUSE_VIDEO: {
+        playPauseVideo();
+        sendResponse({ success: true });
+        break;
+      }
       default:
         break;
     }
@@ -189,7 +282,27 @@ const handleMessage = async (message, sendResponse) => {
   }
 };
 
+/**
+ * Hide video controls when mouse not in video
+ */
+const manageVideoControls = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    return;
+  }
+
+  hideVideoControls();
+  document.addEventListener('mouseover', () => {
+    showVideoControls();
+  });
+  document.addEventListener('mouseout', () => {
+    hideVideoControls();
+  });
+};
+
 const recorder = () => {
+  manageVideoControls();
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleMessage(message, sendResponse);
     return true;
