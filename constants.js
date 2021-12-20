@@ -8,6 +8,8 @@ const DISABLE_CAPTURE_AREA = 'DISABLE_CAPTURE_AREA';
 const TOGGLE_SHOW_HIDE_CAPTURE_AREA = 'TOGGLE_SHOW_HIDE_CAPTURE_AREA';
 const SKIP_5S = 'SKIP_5S';
 const BACK_5S = 'BACK_5S';
+const INCREASE_SPEED = 'INCREASE_SPEED';
+const DECREASE_SPEED = 'DECREASE_SPEED';
 // Get screen width (screen width should only be obtained from content script not popup)
 const GET_SCREEN_DIMENSIONS = 'GET_SCREEN_DIMENSIONS';
 const SHOW_CAPTURE_AREA_IF_NO_VIDEO = 'SHOW_CAPTURE_AREA_IF_NO_VIDEO';
@@ -59,3 +61,13 @@ const BACK_5S_CMD = `${cmdKey}+shift+m`;
 const BACK_5S_CODE = 'KeyM';
 const BACK_5S_KEY = 'm';
 const BACK_5S_HINT_ID = 'back-5s-hint';
+
+const INCREASE_SPEED_CMD = `${cmdKey}+shift+0`;
+const INCREASE_SPEED_CODE = 'Digit0';
+const INCREASE_SPEED_KEY = '0';
+const INCREASE_SPEED_HINT_ID = 'increase-speed-hint';
+
+const DECREASE_SPEED_CMD = `${cmdKey}+shift+9`;
+const DECREASE_SPEED_CODE = 'Digit9';
+const DECREASE_SPEED_KEY = '9';
+const DECREASE_SPEED_HINT_ID = 'decrease-speed-hint';

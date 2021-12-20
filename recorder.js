@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable no-console */
 /* eslint-disable no-undef */
 
@@ -288,6 +289,83 @@ const back5s = () => {
   }
 };
 
+/**
+ * Singleton class
+ */
+class SpeedIndicator {
+  constructor(videoElement, wrapperElement, textElement) {
+    this.videoElement = videoElement;
+    this.wrapperElement = wrapperElement;
+    this.textElement = textElement;
+  }
+
+  static init() {
+    const videoElement = getVideoElement();
+    if (!videoElement) {
+      // Return dummy instance (won't be shown)
+      return new SpeedIndicator(document.createElement('video'), document.createElement('div'), document.createElement('div'));
+    }
+
+    const videoPosition = videoElement.getBoundingClientRect();
+    const wrapperElement = document.createElement('div');
+    wrapperElement.style.cssText = `
+      position: absolute;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 100px;
+      font-family: sans-serif;
+    `;
+
+    wrapperElement.style.left = `${videoPosition.left - 10}px`;
+    wrapperElement.style.top = `${videoPosition.top - 10}px`;
+    wrapperElement.style.width = `${videoPosition.width}px`;
+    wrapperElement.style.height = `${videoPosition.height}px`;
+
+    const textElement = document.createElement('div');
+    wrapperElement.appendChild(textElement);
+    document.body.appendChild(wrapperElement);
+
+    return new SpeedIndicator(videoElement, wrapperElement, textElement);
+  }
+
+  show() {
+    this.textElement.textContent = `${this.videoElement.playbackRate}x`;
+    this.wrapperElement.style.display = 'flex';
+    setTimeout(() => {
+      this.wrapperElement.style.display = 'none';
+    }, 1000);
+  }
+}
+
+/**
+ * Singleton object
+ */
+const speedIndicator = SpeedIndicator.init();
+
+const increaseSpeed = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    sendAlert("There's no video to increase speed");
+    return;
+  }
+
+  videoElement.playbackRate += 0.25;
+  speedIndicator.show();
+};
+
+const decreaseSpeed = () => {
+  const videoElement = getVideoElement();
+  if (!videoElement) {
+    sendAlert("There's no video to increase speed");
+    return;
+  }
+
+  videoElement.playbackRate -= 0.25;
+  speedIndicator.show();
+};
+
 const handleMessage = async (message, sendResponse) => {
   try {
     switch (message.action) {
@@ -329,6 +407,16 @@ const handleMessage = async (message, sendResponse) => {
       }
       case BACK_5S: {
         back5s();
+        sendResponse({ success: true });
+        break;
+      }
+      case INCREASE_SPEED: {
+        increaseSpeed();
+        sendResponse({ success: true });
+        break;
+      }
+      case DECREASE_SPEED: {
+        decreaseSpeed();
         sendResponse({ success: true });
         break;
       }

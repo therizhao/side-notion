@@ -59,7 +59,9 @@ const messageHandler = async (request, sender, sendResponse) => {
       case DISABLE_CAPTURE_AREA:
       case PLAY_PAUSE_VIDEO:
       case SKIP_5S:
-      case BACK_5S: {
+      case BACK_5S:
+      case INCREASE_SPEED:
+      case DECREASE_SPEED: {
         const activeTab = await getActiveTab(request.activeWindowID);
         const response = await sendTabsMessage(activeTab.id, {
           action: request.action,

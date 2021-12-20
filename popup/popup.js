@@ -84,7 +84,10 @@ const disableTakesNotes = () => {
   // Can show tutorial video here
   takesNotesButtonHint.textContent = 'Click the button only on a website where you want to take screenshots from';
 
-  takeNotesButton.parentNode.insertBefore(takesNotesButtonHint, takeNotesButton.nextElementSibling);
+  takeNotesButton.parentNode.insertBefore(
+    takesNotesButtonHint,
+    takeNotesButton.nextElementSibling,
+  );
 };
 
 const main = async () => {

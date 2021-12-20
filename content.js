@@ -31,10 +31,7 @@ class Tutorial {
         document.removeEventListener('keydown', nextStepIfMatch);
       }
     };
-    document.addEventListener(
-      'keydown',
-      nextStepIfMatch,
-    );
+    document.addEventListener('keydown', nextStepIfMatch);
   }
 
   /**
@@ -63,6 +60,9 @@ class Tutorial {
       {
         element: document.getElementById(CAPTURE_HINT_ID),
         intro: `Click on the Notion doc to focus. Try capturing a screenshot by entering ${CAPTURE_CMD}`,
+        onchange: () => {
+          this.skipStepIfMatchCmd(CAPTURE_CODE, CAPTURE_KEY);
+        },
       },
       {
         element: document.getElementById(SHOW_HIDE_AREA_HINT_ID),
@@ -78,6 +78,9 @@ class Tutorial {
       {
         element: document.getElementById(CAPTURE_HINT_ID),
         intro: `Try capturing a screenshot again by entering ${CAPTURE_CMD}`, // The image captured should be that within the box area
+        onchange: () => {
+          this.skipStepIfMatchCmd(CAPTURE_CODE, CAPTURE_KEY);
+        },
       },
       {
         element: document.getElementById(SHOW_HIDE_AREA_HINT_ID),
@@ -90,12 +93,36 @@ class Tutorial {
         element: document.getElementById(CAPTURE_HINT_ID),
         intro:
           'When you try capturing a screenshot again the same capture area would be captured',
+        onchange: () => {
+          this.skipStepIfMatchCmd(CAPTURE_CODE, CAPTURE_KEY);
+        },
       },
       {
         element: document.getElementById(PLAY_PAUSE_HINT_ID),
         intro: 'Try pausing the video by entering cmd+shift+space',
         onchange: () => {
           this.skipStepIfMatchCmd(PLAY_PAUSE_CODE, PLAY_PAUSE_KEY);
+        },
+      },
+      {
+        element: document.getElementById(PLAY_PAUSE_HINT_ID),
+        intro: 'Try playing the video by entering cmd+shift+space',
+        onchange: () => {
+          this.skipStepIfMatchCmd(PLAY_PAUSE_CODE, PLAY_PAUSE_KEY);
+        },
+      },
+      {
+        element: document.getElementById(INCREASE_SPEED_HINT_ID),
+        intro: `Try increasing the video speed by entering ${INCREASE_SPEED_CMD}`,
+        onchange: () => {
+          this.skipStepIfMatchCmd(INCREASE_SPEED_CODE, INCREASE_SPEED_KEY);
+        },
+      },
+      {
+        element: document.getElementById(DECREASE_SPEED_HINT_ID),
+        intro: `Try decreasing the video speed by entering ${DECREASE_SPEED_CMD}`,
+        onchange: () => {
+          this.skipStepIfMatchCmd(DECREASE_SPEED_CODE, DECREASE_SPEED_KEY);
         },
       },
       {
@@ -129,6 +156,7 @@ class Tutorial {
       scrollToElement: true,
       disableInteraction: false,
       overlayOpacity: 0,
+      keyboardNavigation: false,
       steps,
     });
 
@@ -284,9 +312,7 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
     }
 
     // Show/hide area
-    if (
-      isCmdShiftKey(event, SHOW_HIDE_AREA_CODE, SHOW_HIDE_AREA_KEY)
-    ) {
+    if (isCmdShiftKey(event, SHOW_HIDE_AREA_CODE, SHOW_HIDE_AREA_KEY)) {
       flashHighlightElement(document.getElementById(SHOW_HIDE_AREA_HINT_ID));
 
       await chromeSendRuntimeMessage({
@@ -297,9 +323,7 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
     }
 
     // Show tutorial
-    if (
-      isCmdShiftKey(event, SHOW_TUTORIAL_CODE, SHOW_TUTORIAL_KEY)
-    ) {
+    if (isCmdShiftKey(event, SHOW_TUTORIAL_CODE, SHOW_TUTORIAL_KEY)) {
       flashHighlightElement(document.getElementById(SHOW_TUTORIAL_HINT_ID));
 
       tutorial.show(activeWindowID);
@@ -323,6 +347,28 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
 
       await chromeSendRuntimeMessage({
         action: BACK_5S,
+        activeWindowID,
+      });
+      return;
+    }
+
+    // Increase speed
+    if (isCmdShiftKey(event, INCREASE_SPEED_CODE, INCREASE_SPEED_KEY)) {
+      flashHighlightElement(document.getElementById(INCREASE_SPEED_HINT_ID));
+
+      await chromeSendRuntimeMessage({
+        action: INCREASE_SPEED,
+        activeWindowID,
+      });
+      return;
+    }
+
+    // Decrease speed
+    if (isCmdShiftKey(event, DECREASE_SPEED_CODE, DECREASE_SPEED_KEY)) {
+      flashHighlightElement(document.getElementById(DECREASE_SPEED_HINT_ID));
+
+      await chromeSendRuntimeMessage({
+        action: DECREASE_SPEED,
         activeWindowID,
       });
       return;
@@ -462,6 +508,16 @@ const addListener = async () => {
         label: 'Back 5s',
         cmd: BACK_5S_CMD,
         id: BACK_5S_HINT_ID,
+      },
+      {
+        label: 'Faster',
+        cmd: INCREASE_SPEED_CMD,
+        id: INCREASE_SPEED_HINT_ID,
+      },
+      {
+        label: 'Slower',
+        cmd: DECREASE_SPEED_CMD,
+        id: DECREASE_SPEED_HINT_ID,
       },
       {
         label: 'Show/hide area',
