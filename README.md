@@ -33,7 +33,7 @@ https://chrome.google.com/webstore/detail/sidenotion/ihjmeedcmbeapmaagcjpngemnck
 
 ## How to package to Chrome Web Store?
 
-1. Choose all files and folders except for `misc`, `package.json` and `package-lock.json`
+1. Choose all files and folders except for `misc`,`node_modules`, `buildlog.md`, `CHANGELOG.md`, `package-lock.json`, `package.json`, and `README.md`
 2. Compress the chosen files and folders
 3. Rename the zip file to the version number and move it to misc/packages
 4. Upload the zip file to Chrome Web Store

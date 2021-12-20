@@ -1,6 +1,6 @@
 # SideNotion ChangeLog
 
-## v1.3.0-alpha
+## v1.3.0
 
 - Feat: Add onboarding tutorial
 - Feat: Disable `Start taking notes` button on Notion window
@@ -10,6 +10,7 @@
 - Feat: Create new line after pasting screenshot
 - Feat: Fast forward backward video
 - Feat: Show highlighted cmd
+- Fix: Show tutorial only on notion page
 
 ## v1.2.1
 

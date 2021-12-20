@@ -540,4 +540,50 @@ const addListener = async () => {
   }
 };
 
-addListener();
+/**
+ * Init notion content script when enter notion page
+ * Initialisation is done only one
+ * Note: Cannot just do matching in manifest
+ * Reference: https://stackoverflow.com/questions/3522090/event-when-window-location-href-changes
+ */
+const main = () => {
+  let isInitialised = false;
+  let oldHref = window.location.href;
+
+  const addListenerIfMatchNotionPageUrl = () => {
+    if (window.location.href.match(/https:\/\/www.notion.so\/(.*)\/(.*)/g)) {
+      addListener();
+      isInitialised = true;
+    }
+  };
+
+  // Start of activation code
+  addListenerIfMatchNotionPageUrl();
+
+  // End of activation code
+  if (!isInitialised) {
+    window.onload = () => {
+      const bodyList = document.querySelector('body');
+
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach(() => {
+          if (oldHref !== window.location.href) {
+            oldHref = document.location.href;
+            // Start of activation code
+            addListenerIfMatchNotionPageUrl();
+            // End of activation code
+          }
+        });
+      });
+
+      const config = {
+        childList: true,
+        subtree: true,
+      };
+
+      observer.observe(bodyList, config);
+    };
+  }
+};
+
+main();

@@ -83,4 +83,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.tabs.create({ url: HOW_TO_USE_URL });
+});
+
 chrome.runtime.setUninstallURL(FEEDBACK_URL);
