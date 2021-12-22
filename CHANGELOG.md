@@ -2,6 +2,10 @@
 
 ## v1.3.0
 
+- Fix: Temp fix to include `notion.so/*` url path
+
+## v1.3.0
+
 - Feat: Add onboarding tutorial
 - Feat: Disable `Start taking notes` button on Notion window
 - Feat: Disable tutorial after first time
