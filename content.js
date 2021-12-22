@@ -551,7 +551,10 @@ const main = () => {
   let oldHref = window.location.href;
 
   const addListenerIfMatchNotionPageUrl = () => {
-    if (window.location.href.match(/https:\/\/www.notion.so\/(.*)\/(.*)/g)) {
+    if (
+      window.location.href.match(/https:\/\/www.notion.so\/(.*)\/(.*)/g)
+      || window.location.href.match(/https:\/\/www.notion.so\/(.*)/g)
+    ) {
       addListener();
       isInitialised = true;
     }
