@@ -1,5 +1,11 @@
 # SideNotion ChangeLog
 
+## v1.3.1
+
+- Fix: Command listener on notion id pages
+- Feat: Change keyboard command for skip, back, fast, slow
+- Fix: Speed indicator show more clearly
+
 ## v1.3.0
 
 - Fix: Temp fix to include `notion.so/*` url path

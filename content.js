@@ -541,52 +541,66 @@ const addListener = async () => {
 };
 
 /**
+ *
+ * @param {string} url
+ * @returns {boolean}
+ *
+ * @example
+ * https://www.notion.so/rizhaow/714aa33daf4f4decb637053e9c9341ab returns true
+ * https://www.notion.so/ returns fakse
+ */
+const isNotionPageUrl = (url) => {
+  const urlPaths = url.split('/');
+
+  return url.includes(NOTION_URL) && urlPaths[urlPaths.length - 1].length >= 32;
+};
+
+/**
+ *
+ * @returns {(url: string) => void} A func that add listener if current url is notion page url.
+ * Listener is only added the first time.
+ */
+const initAddListenerIfMatchNotionPageUrl = () => {
+  let isInit = false;
+  return (url) => {
+    if (!isInit && isNotionPageUrl(url)) {
+      addListener();
+      isInit = true;
+    }
+  };
+};
+
+/**
  * Init notion content script when enter notion page
  * Initialisation is done only one
  * Note: Cannot just do matching in manifest
  * Reference: https://stackoverflow.com/questions/3522090/event-when-window-location-href-changes
  */
 const main = () => {
-  let isInitialised = false;
+  const addListenerIfMatchNotionPageUrl = initAddListenerIfMatchNotionPageUrl();
   let oldHref = window.location.href;
 
-  const addListenerIfMatchNotionPageUrl = () => {
-    if (
-      window.location.href.match(/https:\/\/www.notion.so\/(.*)\/(.*)/g)
-      || window.location.href.match(/https:\/\/www.notion.so\/(.*)/g)
-    ) {
-      addListener();
-      isInitialised = true;
-    }
-  };
+  addListenerIfMatchNotionPageUrl(window.location.href);
 
-  // Start of activation code
-  addListenerIfMatchNotionPageUrl();
+  window.onload = () => {
+    const bodyList = document.querySelector('body');
 
-  // End of activation code
-  if (!isInitialised) {
-    window.onload = () => {
-      const bodyList = document.querySelector('body');
-
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach(() => {
-          if (oldHref !== window.location.href) {
-            oldHref = document.location.href;
-            // Start of activation code
-            addListenerIfMatchNotionPageUrl();
-            // End of activation code
-          }
-        });
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach(() => {
+        if (oldHref !== window.location.href) {
+          oldHref = window.location.href;
+          addListenerIfMatchNotionPageUrl(window.location.href);
+        }
       });
+    });
 
-      const config = {
-        childList: true,
-        subtree: true,
-      };
-
-      observer.observe(bodyList, config);
+    const config = {
+      childList: true,
+      subtree: true,
     };
-  }
+
+    observer.observe(bodyList, config);
+  };
 };
 
 main();

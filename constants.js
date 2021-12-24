@@ -52,14 +52,14 @@ const SHOW_TUTORIAL_CODE = 'Quote';
 const SHOW_TUTORIAL_KEY = "'";
 const SHOW_TUTORIAL_HINT_ID = 'tutorial-hint';
 
-const SKIP_5S_CMD = `${cmdKey}+shift+.`;
-const SKIP_5S_CODE = 'Period';
-const SKIP_5S_KEY = '.';
+const SKIP_5S_CMD = `${cmdKey}+shift+9`;
+const SKIP_5S_CODE = 'Digit9';
+const SKIP_5S_KEY = '9';
 const SKIP_5S_HINT_ID = 'skip-5s-hint';
 
-const BACK_5S_CMD = `${cmdKey}+shift+m`;
-const BACK_5S_CODE = 'KeyM';
-const BACK_5S_KEY = 'm';
+const BACK_5S_CMD = `${cmdKey}+shift+8`;
+const BACK_5S_CODE = 'Digit8';
+const BACK_5S_KEY = '8';
 const BACK_5S_HINT_ID = 'back-5s-hint';
 
 const INCREASE_SPEED_CMD = `${cmdKey}+shift+0`;
@@ -67,7 +67,7 @@ const INCREASE_SPEED_CODE = 'Digit0';
 const INCREASE_SPEED_KEY = '0';
 const INCREASE_SPEED_HINT_ID = 'increase-speed-hint';
 
-const DECREASE_SPEED_CMD = `${cmdKey}+shift+9`;
-const DECREASE_SPEED_CODE = 'Digit9';
-const DECREASE_SPEED_KEY = '9';
+const DECREASE_SPEED_CMD = `${cmdKey}+shift+7`;
+const DECREASE_SPEED_CODE = 'Digit7';
+const DECREASE_SPEED_KEY = '7';
 const DECREASE_SPEED_HINT_ID = 'decrease-speed-hint';

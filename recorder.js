@@ -303,10 +303,13 @@ class SpeedIndicator {
     const videoElement = getVideoElement();
     if (!videoElement) {
       // Return dummy instance (won't be shown)
-      return new SpeedIndicator(document.createElement('video'), document.createElement('div'), document.createElement('div'));
+      return new SpeedIndicator(
+        document.createElement('video'),
+        document.createElement('div'),
+        document.createElement('div'),
+      );
     }
 
-    const videoPosition = videoElement.getBoundingClientRect();
     const wrapperElement = document.createElement('div');
     wrapperElement.style.cssText = `
       position: absolute;
@@ -316,12 +319,8 @@ class SpeedIndicator {
       color: white;
       font-size: 100px;
       font-family: sans-serif;
+      background: rgba(0, 0, 0, 0.3);
     `;
-
-    wrapperElement.style.left = `${videoPosition.left - 10}px`;
-    wrapperElement.style.top = `${videoPosition.top - 10}px`;
-    wrapperElement.style.width = `${videoPosition.width}px`;
-    wrapperElement.style.height = `${videoPosition.height}px`;
 
     const textElement = document.createElement('div');
     wrapperElement.appendChild(textElement);
@@ -331,8 +330,13 @@ class SpeedIndicator {
   }
 
   show() {
+    const videoPosition = this.videoElement.getBoundingClientRect();
     this.textElement.textContent = `${this.videoElement.playbackRate}x`;
     this.wrapperElement.style.display = 'flex';
+    this.wrapperElement.style.left = `${videoPosition.left - 10}px`;
+    this.wrapperElement.style.top = `${videoPosition.top - 10}px`;
+    this.wrapperElement.style.width = `${videoPosition.width}px`;
+    this.wrapperElement.style.height = `${videoPosition.height}px`;
     setTimeout(() => {
       this.wrapperElement.style.display = 'none';
     }, 1000);
