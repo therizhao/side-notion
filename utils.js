@@ -187,8 +187,18 @@ const isCmdShiftKey = (event, matchCode, matchKey) => (event.metaKey || event.ct
  */
 const flashHighlightElement = (element) => {
   element.style.transition = 'box-shadow 0.2s';
-  element.style.boxShadow = '0 0 0 2px rgb(55, 53, 47)';
+  element.style.boxShadow = `0 0 0 2px ${NOTION_BLACK}`;
   setTimeout(() => {
     element.style.boxShadow = 'none';
   }, 1000);
+};
+
+/**
+ * @param {string} html representing a single element
+ * @return {Element}
+ */
+const htmlStringToElement = (html) => {
+  const template = document.createElement('template');
+  template.innerHTML = html.trim();
+  return template.content.firstChild;
 };

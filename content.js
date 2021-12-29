@@ -140,8 +140,9 @@ class Tutorial {
         },
       },
       {
-        element: document.getElementById(SHOW_TUTORIAL_HINT_ID),
-        intro: `That’s all 🎉. If you need to go through the tutorial again, just enter ${SHOW_TUTORIAL_CMD}`,
+        element: document.getElementById(TUTORIAL_BUTTON_ID),
+        intro:
+          "That's all 🎉. If you need to go through the tutorial again, just click the tutorial button",
         onchange: () => {
           chromeSendRuntimeMessage({
             action: DISABLE_CAPTURE_AREA,
@@ -248,7 +249,6 @@ const pasteFromClipboardToNotion = () => {
 };
 
 /**
- * Pastes blob to notion
  *
  * @param {Blob} blob
  *
@@ -322,14 +322,6 @@ const handleKeyDown = async (activeWindowID, isSameWindow, event) => {
       return;
     }
 
-    // Show tutorial
-    if (isCmdShiftKey(event, SHOW_TUTORIAL_CODE, SHOW_TUTORIAL_KEY)) {
-      flashHighlightElement(document.getElementById(SHOW_TUTORIAL_HINT_ID));
-
-      tutorial.show(activeWindowID);
-      return;
-    }
-
     // Skip 5s
     if (isCmdShiftKey(event, SKIP_5S_CODE, SKIP_5S_KEY)) {
       flashHighlightElement(document.getElementById(SKIP_5S_HINT_ID));
@@ -391,21 +383,98 @@ const addKeydownListener = (activeWindowID, isSameWindow) => {
   });
 };
 
-const showUsageHint = (usageHints) => {
+const createUsageHintButtons = (activeWindowID) => {
+  const container = htmlStringToElement(`
+  <div class="usage-hint__button-container">
+    <div id="${TUTORIAL_BUTTON_ID}" class="usage-hint__button" title="Show tutorial">
+      <span>Tutorial</span>
+      <svg id="tutorial-button-icon" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px">
+        <path d="M0 0h24v24H0V0z" fill="none"></path><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"></path>
+      </svg>
+    </div>
+    <div id="${EDIT_KEYBOARD_SHORTCUT_BUTTON_ID}" class="usage-hint__button" data-micromodal-trigger="${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}">
+      Edit shortcuts
+    </div>
+  </div>
+`);
+
+  container
+    .querySelector(`#${TUTORIAL_BUTTON_ID}`)
+    .addEventListener('click', () => {
+      tutorial.show(activeWindowID);
+    });
+
+  return container;
+};
+
+const showUsageHint = (usageHints, activeWindowID) => {
+  const renderChild = ({ label, cmd, id }) => {
+    const childContainer = document.createElement('div');
+    childContainer.id = id;
+    childContainer.className = 'child-container';
+
+    const labelElement = document.createElement('span');
+    labelElement.textContent = label;
+    labelElement.className = 'child-label';
+
+    const cmdElement = document.createElement('span');
+    cmdElement.textContent = cmd;
+    cmdElement.className = 'child-cmd';
+
+    childContainer.appendChild(labelElement);
+    childContainer.appendChild(cmdElement);
+    return childContainer;
+  };
+
   const bodyElement = getBodyElement();
   addCustomStyles(`
     .usage-hint {
       position: absolute;
       bottom: 16px;
       right: 16px;
-      padding: 6px 12px;
+      padding: 0 12px;
+      padding-top: 4px;
+      padding-bottom: 6px;
       background: white;
       width: 223px;
-      color: rgb(55, 53, 47);
+      color: ${NOTION_BLACK};
       box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
       border-radius: 3px;
       z-index: 101;
       font-size: 14px;
+      cursor: default;
+    }
+
+    .usage-hint__button-container {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 3px;
+    }
+
+    .usage-hint__button {
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0 5px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .usage-hint__button:hover {
+      background: rgba(55, 53, 47, 0.08);
+    }
+
+    #${TUTORIAL_BUTTON_ID} {
+      margin-left: -5px;
+    }
+
+    #tutorial-button-icon {
+      width: 15px;
+      margin-left: 2px;
+      fill: ${NOTION_BLACK};
+    }
+
+    #${EDIT_KEYBOARD_SHORTCUT_BUTTON_ID} {
+      margin-right: -5px;
     }
 
     .child-container {
@@ -452,32 +521,90 @@ const showUsageHint = (usageHints) => {
 }
   `);
 
-  const renderChild = ({ label, cmd, id }) => {
-    const childContainer = document.createElement('div');
-    childContainer.id = id;
-    childContainer.className = 'child-container';
+  const usageHintsElement = document.createElement('div');
+  usageHintsElement.id = USAGE_HINT_CONTAINER_ID;
+  usageHintsElement.className = 'usage-hint';
 
-    const labelElement = document.createElement('span');
-    labelElement.textContent = label;
-    labelElement.className = 'child-label';
-
-    const cmdElement = document.createElement('span');
-    cmdElement.textContent = cmd;
-    cmdElement.className = 'child-cmd';
-
-    childContainer.appendChild(labelElement);
-    childContainer.appendChild(cmdElement);
-    return childContainer;
-  };
-
-  const divElement = document.createElement('div');
-  divElement.id = USAGE_HINT_CONTAINER_ID;
-  divElement.className = 'usage-hint';
+  // Add usage hint buttons
+  usageHintsElement.appendChild(createUsageHintButtons(activeWindowID));
+  // Add usage hints label, text & id
   usageHints.forEach((data) => {
-    divElement.appendChild(renderChild(data));
+    usageHintsElement.appendChild(renderChild(data));
   });
 
-  bodyElement.appendChild(divElement);
+  bodyElement.appendChild(usageHintsElement);
+};
+
+const addKeyboardShorcutsModal = () => {
+  addCustomStyles(`
+    #${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID} {
+      display: none;
+      opacity: 0;
+    }
+    
+    #${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}.is-open {
+      display: block;
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      z-index: 999;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      inset: 0px;
+      background: rgba(15, 15, 15, 0.6);
+      transform: translateZ(0px);
+      pointer-events: auto;
+      transition: opacity 0.2s;
+    }
+
+    .modal-container {
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      display: flex;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      justify-content: center;
+      pointer-events: auto;
+      opacity: 1;
+      transform: translateZ(0px);
+    }
+
+    .modal-content {
+      position: relative;
+      z-index: 1;
+      box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 5px 10px, rgb(15 15 15 / 20%) 0px 15px 40px;
+      border-radius: 3px;
+      background: white;
+      margin-bottom: 0px;
+      width: 960px;
+      max-width: calc(100vw - 100px);
+      height: calc(100vh - 100px);
+      overflow: hidden;
+      max-height: 695px;
+    }
+  `);
+
+  const modalElement = htmlStringToElement(`
+  <div id="${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}" aria-hidden="true">
+    <div class="modal-overlay" tabindex="-1" data-micromodal-close="${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}">
+      <div class="modal-container" aria-modal="true" >
+        <div class="modal-content">
+          Modal Content
+        </div>
+      </div>
+    </div>
+  </div>
+  `);
+
+  getBodyElement().appendChild(modalElement);
+  MicroModal.init();
 };
 
 const addListener = async () => {
@@ -488,48 +615,47 @@ const addListener = async () => {
     ]);
 
     addKeydownListener(activeWindowID, false);
-    showUsageHint([
-      {
-        label: 'Capture',
-        cmd: CAPTURE_CMD,
-        id: CAPTURE_HINT_ID,
-      },
-      {
-        label: 'Play/pause',
-        cmd: PLAY_PAUSE_CMD,
-        id: PLAY_PAUSE_HINT_ID,
-      },
-      {
-        label: 'Skip 5s',
-        cmd: SKIP_5S_CMD,
-        id: SKIP_5S_HINT_ID,
-      },
-      {
-        label: 'Back 5s',
-        cmd: BACK_5S_CMD,
-        id: BACK_5S_HINT_ID,
-      },
-      {
-        label: 'Faster',
-        cmd: INCREASE_SPEED_CMD,
-        id: INCREASE_SPEED_HINT_ID,
-      },
-      {
-        label: 'Slower',
-        cmd: DECREASE_SPEED_CMD,
-        id: DECREASE_SPEED_HINT_ID,
-      },
-      {
-        label: 'Show/hide area',
-        cmd: SHOW_HIDE_AREA_CMD,
-        id: SHOW_HIDE_AREA_HINT_ID,
-      },
-      {
-        label: 'Show tutorial',
-        cmd: SHOW_TUTORIAL_CMD,
-        id: SHOW_TUTORIAL_HINT_ID,
-      },
-    ]);
+    showUsageHint(
+      [
+        {
+          label: 'Capture',
+          cmd: CAPTURE_CMD,
+          id: CAPTURE_HINT_ID,
+        },
+        {
+          label: 'Play/pause',
+          cmd: PLAY_PAUSE_CMD,
+          id: PLAY_PAUSE_HINT_ID,
+        },
+        {
+          label: 'Skip 5s',
+          cmd: SKIP_5S_CMD,
+          id: SKIP_5S_HINT_ID,
+        },
+        {
+          label: 'Back 5s',
+          cmd: BACK_5S_CMD,
+          id: BACK_5S_HINT_ID,
+        },
+        {
+          label: 'Faster',
+          cmd: INCREASE_SPEED_CMD,
+          id: INCREASE_SPEED_HINT_ID,
+        },
+        {
+          label: 'Slower',
+          cmd: DECREASE_SPEED_CMD,
+          id: DECREASE_SPEED_HINT_ID,
+        },
+        {
+          label: 'Show/hide area',
+          cmd: SHOW_HIDE_AREA_CMD,
+          id: SHOW_HIDE_AREA_HINT_ID,
+        },
+      ],
+      activeWindowID,
+    );
+    addKeyboardShorcutsModal();
     if (!hasShownTutorial) {
       tutorial.show(activeWindowID);
       await setLocalStorageData({ hasShownTutorial: true });

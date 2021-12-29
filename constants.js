@@ -19,18 +19,26 @@ const NOTION_ERR_MESSAGE = `Error 😢. Try
   1️⃣ Refresh the video window
   2️⃣ Start a new notetaking session`;
 
-const CAPTURE_AREA_ID = 'capture-area';
 const HOW_TO_USE_URL = 'https://www.youtube.com/watch?v=n-FfbX9zhdw';
 const FEEDBACK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdq6KtGZKvPLN2KBaxyw3D37PidA9EBFAfYUtaR7Vq8mGuZdQ/viewform?usp=sf_link';
 const REVIEW_URL = 'https://chrome.google.com/webstore/detail/sidenotion/ihjmeedcmbeapmaagcjpngemnckiooih/reviews';
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-const USAGE_HINT_CONTAINER_ID = 'usage-hint-container';
+// Element IDs
 
-const cmdKey = isMac ? 'cmd' : 'ctrl';
+const CAPTURE_AREA_ID = 'capture-area';
+const EDIT_KEYBOARD_SHORTCUT_BUTTON_ID = 'edit-keyboard-shortcut-button';
+const TUTORIAL_BUTTON_ID = 'tutorial_button';
+const USAGE_HINT_CONTAINER_ID = 'usage-hint-container';
+const EDIT_KEYBOARD_SHORTCUTS_MODAL_ID = 'edit-keyboard-shortcuts-modal';
+
+// Colors
+
+const NOTION_BLACK = 'rgb(55, 53, 47)';
 
 // Commands
+const cmdKey = isMac ? 'cmd' : 'ctrl';
 
 const CAPTURE_CMD = `${cmdKey}+shift+,`;
 const CAPTURE_CODE = 'Comma';
