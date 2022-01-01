@@ -6,10 +6,7 @@ const TAKE_SCREEN_SHOT = 'TAKE_SCREEN_SHOT';
 const GET_VIDEO_POSITION_DATA = 'GET_VIDEO_POSITION_DATA';
 const DISABLE_CAPTURE_AREA = 'DISABLE_CAPTURE_AREA';
 const TOGGLE_SHOW_HIDE_CAPTURE_AREA = 'TOGGLE_SHOW_HIDE_CAPTURE_AREA';
-const SKIP_5S = 'SKIP_5S';
-const BACK_5S = 'BACK_5S';
-const INCREASE_SPEED = 'INCREASE_SPEED';
-const DECREASE_SPEED = 'DECREASE_SPEED';
+
 // Get screen width (screen width should only be obtained from content script not popup)
 const GET_SCREEN_DIMENSIONS = 'GET_SCREEN_DIMENSIONS';
 const SHOW_CAPTURE_AREA_IF_NO_VIDEO = 'SHOW_CAPTURE_AREA_IF_NO_VIDEO';
@@ -37,45 +34,72 @@ const EDIT_KEYBOARD_SHORTCUTS_MODAL_ID = 'edit-keyboard-shortcuts-modal';
 
 const NOTION_BLACK = 'rgb(55, 53, 47)';
 
+// Actions
+
+const CAPTURE = 'CAPTURE';
+const PLAY_PAUSE = 'PLAY_PAUSE';
+const SHOW_HIDE_AREA = 'SHOW_HIDE_AREA';
+const SHOW_TUTORIAL = 'SHOW_TUTORIAL';
+const SKIP_5S = 'SKIP_5S';
+const BACK_5S = 'BACK_5S';
+const INCREASE_SPEED = 'INCREASE_SPEED';
+const DECREASE_SPEED = 'DECREASE_SPEED';
+
 // Commands
+
 const cmdKey = isMac ? 'cmd' : 'ctrl';
 
-const CAPTURE_CMD = `${cmdKey}+shift+,`;
-const CAPTURE_CODE = 'Comma';
-const CAPTURE_KEY = ',';
-const CAPTURE_HINT_ID = 'capture-hint';
-
-const PLAY_PAUSE_CMD = `${cmdKey}+shift+␣`;
-const PLAY_PAUSE_CODE = 'Space';
-const PLAY_PAUSE_KEY = ' ';
-const PLAY_PAUSE_HINT_ID = 'play-pause-hint';
-
-const SHOW_HIDE_AREA_CMD = `${cmdKey}+shift+k`;
-const SHOW_HIDE_AREA_CODE = 'KeyK';
-const SHOW_HIDE_AREA_KEY = 'k';
-const SHOW_HIDE_AREA_HINT_ID = 'toggle-capture-area-hint';
-
-const SHOW_TUTORIAL_CMD = `${cmdKey}+shift+'`;
-const SHOW_TUTORIAL_CODE = 'Quote';
-const SHOW_TUTORIAL_KEY = "'";
-const SHOW_TUTORIAL_HINT_ID = 'tutorial-hint';
-
-const SKIP_5S_CMD = `${cmdKey}+shift+9`;
-const SKIP_5S_CODE = 'Digit9';
-const SKIP_5S_KEY = '9';
-const SKIP_5S_HINT_ID = 'skip-5s-hint';
-
-const BACK_5S_CMD = `${cmdKey}+shift+8`;
-const BACK_5S_CODE = 'Digit8';
-const BACK_5S_KEY = '8';
-const BACK_5S_HINT_ID = 'back-5s-hint';
-
-const INCREASE_SPEED_CMD = `${cmdKey}+shift+0`;
-const INCREASE_SPEED_CODE = 'Digit0';
-const INCREASE_SPEED_KEY = '0';
-const INCREASE_SPEED_HINT_ID = 'increase-speed-hint';
-
-const DECREASE_SPEED_CMD = `${cmdKey}+shift+7`;
-const DECREASE_SPEED_CODE = 'Digit7';
-const DECREASE_SPEED_KEY = '7';
-const DECREASE_SPEED_HINT_ID = 'decrease-speed-hint';
+// Default commands
+/**
+ * https://craig.is/killing/mice
+ * mod key
+ * On Mac this ends up mapping to command+s whereas on Windows and Linux it maps to ctrl+s.
+ *
+ * This differs from the array example above because there both ctrl+s
+ * and command+s will trigger save on Mac whereas with the mod helper only
+ * command+s will.
+ */
+const defaultCommands = [
+  {
+    action: CAPTURE,
+    cmd: 'mod+shift+,',
+    label: 'Capture',
+    id: 'capture-hint',
+  },
+  {
+    action: PLAY_PAUSE,
+    cmd: 'mod+shift+space',
+    label: 'Play/pause',
+    id: 'play-pause-hint',
+  },
+  {
+    action: SKIP_5S,
+    cmd: 'mod+shift+9',
+    label: 'Skip 5s',
+    id: 'skip-5s-hint',
+  },
+  {
+    action: BACK_5S,
+    cmd: 'mod+shift+8',
+    label: 'Back 5s',
+    id: 'back-5s-hint',
+  },
+  {
+    action: INCREASE_SPEED,
+    cmd: 'mod+shift+0',
+    label: 'Faster',
+    id: 'increase-speed-hint',
+  },
+  {
+    action: DECREASE_SPEED,
+    cmd: 'mod+shift+7',
+    label: 'Slower',
+    id: 'decrease-speed-hint',
+  },
+  {
+    action: SHOW_HIDE_AREA,
+    cmd: 'mod+shift+k',
+    label: 'Show/hide area',
+    id: 'show-hide-area-hint',
+  },
+];

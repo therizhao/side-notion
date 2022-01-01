@@ -12,7 +12,7 @@
       "all_frames": true
     },
     {
-      "js": ["constants.js", "utils.js", "packages/intro.js", "packages/micromodal.js", "packages/hotkeys.js", "content.js"],
+      "js": ["constants.js", "utils.js", "packages/intro.js", "packages/micromodal.js", "packages/mousetrap.js", "packages/mousetrap-record.js", "packages/mousetrap-pause.js", "content.js"],
       "css": ["packages/intro.css"],
       "matches": ["http://www.notion.so/*", "https://www.notion.so/*"]
     }

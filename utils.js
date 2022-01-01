@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-alert */
@@ -37,6 +38,92 @@ const chromeSendRuntimeMessage = (message) => new Promise((resolve, reject) => {
  * @returns {boolean} true iff is iframe created by sidenotion
  */
 const getVideoURL = () => getLocalStorageData(['videoURL']);
+
+class Command {
+  /**
+   *
+   * @param {string} action
+   * @param {string} cmd
+   * @param {string} label
+   * @param {string} id
+   */
+  constructor(action, cmd, label, id) {
+    this.action = action;
+    this.cmd = cmd;
+    this.label = label;
+    this.id = id;
+  }
+
+  /**
+   *
+   * @param {string} cmd Mousetrap command string to set
+   */
+  setCmd(cmd) {
+    this.cmd = cmd;
+  }
+
+  /**
+   *
+   * @returns {string}
+   */
+  getDisplayedCmd() {
+    const displayedCmdKey = isMac ? 'cmd' : 'ctrl';
+    let displayedCmd = this.cmd.replace('mod', displayedCmdKey);
+    displayedCmd = displayedCmd.replace('meta', 'cmd');
+    displayedCmd = displayedCmd.replace('space', '␣');
+    return displayedCmd;
+  }
+}
+
+/**
+ *
+ * @param {Object} commandObject
+ */
+const isValidCommand = (commandObject) => ['action', 'cmd', 'label', 'id'].every(((prop) => prop in commandObject));
+
+/**
+ *
+ * @param {Command[]} commands
+ */
+const updateCommandsStorage = async (commands) => {
+  const commandsObjArr = commands.map(({
+    action, label, cmd, id,
+  }) => ({
+    action,
+    cmd,
+    label,
+    id,
+  }));
+  await setLocalStorageData({ commands: JSON.stringify(commandsObjArr) });
+};
+
+const getCommands = async () => {
+  /**
+   *
+   * @param {Object[]} commands
+   */
+  const constructCommandsList = (commands) => commands.map(
+    (command) => new Command(command.action, command.cmd, command.label, command.id),
+  );
+  const { commands } = await getLocalStorageData(['commands']);
+  if (commands) {
+    const commandsObjList = JSON.parse(commands);
+    if (commandsObjList.every(isValidCommand)) {
+      return constructCommandsList(commandsObjList);
+    }
+  }
+
+  await setLocalStorageData({ commands: JSON.stringify(defaultCommands) });
+  return constructCommandsList(defaultCommands);
+};
+
+/**
+ *
+ * @param {Command[]} commands
+ * @param {string} action
+ * @returns
+ */
+const getCommandFromCommandList = (commands, action) => commands.find((command) => command.action === action);
 
 // GENERAL UTILS
 
@@ -201,4 +288,26 @@ const htmlStringToElement = (html) => {
   const template = document.createElement('template');
   template.innerHTML = html.trim();
   return template.content.firstChild;
+};
+
+/**
+ *
+ * @param {Object[]} commands
+ */
+const getCommand = (commands, action) => commands.find((command) => command.action === action);
+
+const getCommandUsageHint = (commands, action) => {
+  const command = getCommand(action);
+  return {
+    label: command.label,
+    cmd: mouseTrapCmdToReadableCmd(command.cmd),
+    id: command.id,
+  };
+};
+
+const removeElementsByClass = (className) => {
+  const elements = document.getElementsByClassName(className);
+  while (elements.length > 0) {
+    elements[0].parentNode.removeChild(elements[0]);
+  }
 };
