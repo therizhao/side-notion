@@ -171,6 +171,11 @@ class Tutorial {
         },
       },
       {
+        element: document.getElementById(EDIT_KEYBOARD_SHORTCUT_BUTTON_ID),
+        intro:
+          'If you want to edit the keyboard shorcuts, click "Edit shortcuts"',
+      },
+      {
         element: document.getElementById(TUTORIAL_BUTTON_ID),
         intro:
           "That's all 🎉. If you need to go through the tutorial again, just click the tutorial button",
@@ -398,12 +403,20 @@ const handleKeyDown = async (commands, activeWindowID) => {
 };
 
 /**
- *
- * @param {Command[]} commands
- * @param {number} activeWindowID
+ * Singleton class
  */
-const createUsageHintButtons = (commands, activeWindowID) => {
-  const container = htmlStringToElement(`
+class UsageHint {
+  constructor(usageHintsElement) {
+    this.usageHintsElement = usageHintsElement;
+  }
+
+  /**
+   *
+   * @param {Command[]} commands
+   * @param {number} activeWindowID
+   */
+  static createUsageHintButtons(commands, activeWindowID) {
+    const container = htmlStringToElement(`
   <div class="usage-hint__button-container">
     <div id="${TUTORIAL_BUTTON_ID}" class="usage-hint__button" title="Show tutorial">
       <span>Tutorial</span>
@@ -417,21 +430,13 @@ const createUsageHintButtons = (commands, activeWindowID) => {
   </div>
 `);
 
-  container
-    .querySelector(`#${TUTORIAL_BUTTON_ID}`)
-    .addEventListener('click', () => {
-      tutorial.show(commands, activeWindowID);
-    });
+    container
+      .querySelector(`#${TUTORIAL_BUTTON_ID}`)
+      .addEventListener('click', () => {
+        tutorial.show(commands, activeWindowID);
+      });
 
-  return container;
-};
-
-/**
- * Singleton class
- */
-class UsageHint {
-  constructor(usageHintsElement) {
-    this.usageHintsElement = usageHintsElement;
+    return container;
   }
 
   static get COMMAND_CONTAINER() {
@@ -444,7 +449,7 @@ class UsageHint {
   .usage-hint {
     position: absolute;
     bottom: 16px;
-    right: 16px;
+    right: 18px;
     padding: 0 12px;
     padding-top: 4px;
     padding-bottom: 6px;
@@ -456,6 +461,30 @@ class UsageHint {
     z-index: 101;
     font-size: 14px;
     cursor: default;
+  }
+
+  .usage-hint > .close-button {
+    position: absolute;
+    background: white;
+    right: -8px;
+    top: -7px;
+    border-radius: 100%;
+    border: solid 1px rgb(55, 53, 47);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .usage-hint > .close-button:hover {
+    background: rgb(242 242 242);
+  }
+
+  .usage-hint > .close-button > svg {
+    width: 90%;
+    fill: rgb(55, 53, 47);
   }
 
   .usage-hint__button-container {
@@ -514,6 +543,41 @@ class UsageHint {
     line-height: normal;
   }
 
+  .show-usage-hint-button {
+    user-select: none;
+    transition: opacity 700ms ease 0s, color 700ms ease 0s, transform 200ms ease 0s;
+    cursor: pointer;
+    opacity: 1;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    bottom: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 100%;
+    font-size: 20px;
+    box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 2px 4px;
+    z-index: 101;
+    transform: translateX(0px) translateZ(0px);
+    visibility: visible;
+  }
+
+  .show-usage-hint-button:hover {
+    background-color: rgb(239, 239, 238);
+  }
+
+  .show-usage-hint-button > svg {
+    fill: rgb(55, 53, 47);
+  }
+
+  /* Hide notion help button */
+  .notion-help-button {
+    display: none !important;
+  }
+
   ${
   bodyElement.classList.contains('dark')
     ? `
@@ -534,9 +598,31 @@ class UsageHint {
 }
 `);
 
-    const usageHintsElement = document.createElement('div');
-    usageHintsElement.id = USAGE_HINT_CONTAINER_ID;
-    usageHintsElement.className = 'usage-hint';
+    const showUsageHintsElement = htmlStringToElement(`
+      <div class="show-usage-hint-button">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"></path></svg>
+      </div>
+    `);
+    showUsageHintsElement.style.visibility = 'hidden';
+    showUsageHintsElement.addEventListener('click', () => {
+      showUsageHintsElement.style.visibility = 'hidden';
+      usageHintsElement.style.visibility = 'visible';
+    });
+    getBodyElement().appendChild(showUsageHintsElement);
+
+    const usageHintsElement = htmlStringToElement(`
+    <div id="${USAGE_HINT_CONTAINER_ID}" class="usage-hint">
+      <div class="close-button" title="Hide usage hints">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0V0z" fill="none"></path><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+      </div>
+    </div>
+  `);
+    usageHintsElement
+      .querySelector('.close-button')
+      .addEventListener('click', () => {
+        usageHintsElement.style.visibility = 'hidden';
+        showUsageHintsElement.style.visibility = 'visible';
+      });
 
     return new UsageHint(usageHintsElement);
   }
@@ -563,12 +649,12 @@ class UsageHint {
     return childContainer;
   }
 
-  show(commands, activeWindowID) {
+  setup(commands, activeWindowID) {
     const bodyElement = getBodyElement();
 
     // Add usage hint buttons
     this.usageHintsElement.appendChild(
-      createUsageHintButtons(commands, activeWindowID),
+      UsageHint.createUsageHintButtons(commands, activeWindowID),
     );
     // Add usage hints label, text & id
     commands.forEach((command) => {
@@ -584,7 +670,10 @@ class UsageHint {
    */
   update(commands) {
     // Remove all command containers
-    removeElementsByClassFromParent(this.usageHintsElement, UsageHint.COMMAND_CONTAINER);
+    removeElementsByClassFromParent(
+      this.usageHintsElement,
+      UsageHint.COMMAND_CONTAINER,
+    );
 
     commands.forEach((command) => {
       this.usageHintsElement.appendChild(UsageHint.renderCommand(command));
@@ -670,14 +759,14 @@ class KeyboardShortcutsModal {
       border-radius: 3px;
       background: white;
       margin-bottom: 0px;
-      width: 960px;
+      width: 580px;
+      height: 460px;
       max-width: calc(100vw - 100px);
-      height: calc(100vh - 100px);
+      max-height: calc(100vh - 100px);
       overflow: hidden;
       display: flex;
       align-items: center;
       flex-direction: column;
-      max-height: 695px;
     }
 
     .modal-content {
@@ -866,8 +955,14 @@ class KeyboardShortcutsModal {
     usageHint.update(defaultCommands);
 
     // Remove old rows and render new ones
-    removeElementsByClassFromParent(this.modalElement, KeyboardShortcutsModal.CMD_ACTION);
-    removeElementsByClassFromParent(this.modalElement, KeyboardShortcutsModal.CMD_SHORTCUT);
+    removeElementsByClassFromParent(
+      this.modalElement,
+      KeyboardShortcutsModal.CMD_ACTION,
+    );
+    removeElementsByClassFromParent(
+      this.modalElement,
+      KeyboardShortcutsModal.CMD_SHORTCUT,
+    );
     this.renderCommands(defaultCommands, activeWindowID);
 
     commandsTrap.unpause();
@@ -883,15 +978,23 @@ class KeyboardShortcutsModal {
     commands.forEach((command) => {
       const cmdElement = htmlStringToElement(`
         <div class="${KeyboardShortcutsModal.CMD_SHORTCUT}">
-          <span class="${KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY}">${command.getDisplayedCmd()}</span>
-          <span class="${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT}">(Click to edit)</span>
+          <span class="${
+  KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY
+}">${command.getDisplayedCmd()}</span>
+          <span class="${
+  KeyboardShortcutsModal.CMD_SHORTCUT_EDIT
+}">(Click to edit)</span>
         </div>
       `);
 
       cmdElement.onclick = () => {
         KeyboardShortcutsModal.recordCommand(
-          cmdElement.querySelector(`.${KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY}`),
-          cmdElement.querySelector(`.${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT}`),
+          cmdElement.querySelector(
+            `.${KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY}`,
+          ),
+          cmdElement.querySelector(
+            `.${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT}`,
+          ),
           commands,
           command,
           activeWindowID,
@@ -899,7 +1002,9 @@ class KeyboardShortcutsModal {
       };
 
       this.tableElement.appendChild(
-        htmlStringToElement(`<div class="${KeyboardShortcutsModal.CMD_ACTION}">${command.label}</div>`),
+        htmlStringToElement(
+          `<div class="${KeyboardShortcutsModal.CMD_ACTION}">${command.label}</div>`,
+        ),
       );
       this.tableElement.appendChild(cmdElement);
     });
@@ -916,9 +1021,11 @@ class KeyboardShortcutsModal {
     // Must be called only after data-micromodal-trigger is set
     MicroModal.init();
 
-    this.modalElement.querySelector('.reset-button').addEventListener('click', () => {
-      this.resetCommands(commands, activeWindowID);
-    });
+    this.modalElement
+      .querySelector('.reset-button')
+      .addEventListener('click', () => {
+        this.resetCommands(commands, activeWindowID);
+      });
     this.renderCommands(commands, activeWindowID);
   }
 }
@@ -934,7 +1041,7 @@ const addListener = async () => {
     const commands = await getCommands();
 
     handleKeyDown(commands, activeWindowID);
-    usageHint.show(commands, activeWindowID);
+    usageHint.setup(commands, activeWindowID);
     keyboardShortcutsModal.setup(commands, activeWindowID);
     if (!hasShownTutorial) {
       tutorial.show(commands, activeWindowID);
