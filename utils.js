@@ -79,7 +79,7 @@ class Command {
  *
  * @param {Object} commandObject
  */
-const isValidCommand = (commandObject) => ['action', 'cmd', 'label', 'id'].every(((prop) => prop in commandObject));
+const isValidCommand = (commandObject) => ['action', 'cmd', 'label', 'id'].every((prop) => prop in commandObject);
 
 /**
  *
@@ -97,14 +97,15 @@ const updateCommandsStorage = async (commands) => {
   await setLocalStorageData({ commands: JSON.stringify(commandsObjArr) });
 };
 
+/**
+ *
+ * @param {Object[]} commands
+ */
+const constructCommandsList = (commands) => commands.map(
+  (command) => new Command(command.action, command.cmd, command.label, command.id),
+);
+
 const getCommands = async () => {
-  /**
-   *
-   * @param {Object[]} commands
-   */
-  const constructCommandsList = (commands) => commands.map(
-    (command) => new Command(command.action, command.cmd, command.label, command.id),
-  );
   const { commands } = await getLocalStorageData(['commands']);
   if (commands) {
     const commandsObjList = JSON.parse(commands);
@@ -113,8 +114,8 @@ const getCommands = async () => {
     }
   }
 
-  await setLocalStorageData({ commands: JSON.stringify(defaultCommands) });
-  return constructCommandsList(defaultCommands);
+  await setLocalStorageData({ commands: JSON.stringify(defaultCommandsJson) });
+  return constructCommandsList(defaultCommandsJson);
 };
 
 /**
@@ -305,8 +306,13 @@ const getCommandUsageHint = (commands, action) => {
   };
 };
 
-const removeElementsByClass = (className) => {
-  const elements = document.getElementsByClassName(className);
+/**
+ *
+ * @param {Element} parentNode
+ * @param {string} className
+ */
+const removeElementsByClassFromParent = (parentNode, className) => {
+  const elements = parentNode.getElementsByClassName(className);
   while (elements.length > 0) {
     elements[0].parentNode.removeChild(elements[0]);
   }

@@ -584,7 +584,7 @@ class UsageHint {
    */
   update(commands) {
     // Remove all command containers
-    removeElementsByClass(UsageHint.COMMAND_CONTAINER);
+    removeElementsByClassFromParent(this.usageHintsElement, UsageHint.COMMAND_CONTAINER);
 
     commands.forEach((command) => {
       this.usageHintsElement.appendChild(UsageHint.renderCommand(command));
@@ -594,149 +594,26 @@ class UsageHint {
 
 const usageHint = UsageHint.init();
 
-// /**
-//  *
-//  * @param {Command[]} commands
-//  * @param {number} activeWindowID
-//  */
-// const showUsageHint = (commands, activeWindowID) => {
-//   /**
-//    *
-//    * @param {Command} command
-//    */
-//   const renderChild = (command) => {
-//     const childContainer = document.createElement('div');
-//     childContainer.id = command.id;
-//     childContainer.className = 'command-container';
-
-//     const labelElement = document.createElement('span');
-//     labelElement.textContent = command.label;
-//     labelElement.className = 'command-label';
-
-//     const cmdElement = document.createElement('span');
-//     cmdElement.textContent = command.getDisplayedCmd();
-//     cmdElement.className = 'command-cmd';
-
-//     childContainer.appendChild(labelElement);
-//     childContainer.appendChild(cmdElement);
-//     return childContainer;
-//   };
-
-//   const bodyElement = getBodyElement();
-//   addCustomStyles(`
-//     .usage-hint {
-//       position: absolute;
-//       bottom: 16px;
-//       right: 16px;
-//       padding: 0 12px;
-//       padding-top: 4px;
-//       padding-bottom: 6px;
-//       background: white;
-//       width: 223px;
-//       color: ${NOTION_BLACK};
-//       box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 3px 6px, rgb(15 15 15 / 20%) 0px 9px 24px;
-//       border-radius: 3px;
-//       z-index: 101;
-//       font-size: 14px;
-//       cursor: default;
-//     }
-
-//     .usage-hint__button-container {
-//       display: flex;
-//       justify-content: space-between;
-//       padding-bottom: 3px;
-//     }
-
-//     .usage-hint__button {
-//       border-radius: 4px;
-//       cursor: pointer;
-//       padding: 0 5px;
-//       display: inline-flex;
-//       align-items: center;
-//     }
-
-//     .usage-hint__button:hover {
-//       background: rgba(55, 53, 47, 0.08);
-//     }
-
-//     #${TUTORIAL_BUTTON_ID} {
-//       margin-left: -5px;
-//     }
-
-//     #tutorial-button-icon {
-//       width: 15px;
-//       margin-left: 2px;
-//       fill: ${NOTION_BLACK};
-//     }
-
-//     #${EDIT_KEYBOARD_SHORTCUT_BUTTON_ID} {
-//       margin-right: -5px;
-//     }
-
-//     .command-container {
-//       width: 100%;
-//       margin-bottom: 6px;
-//       display: inline-flex;
-//       justify-content: space-between;
-//       align-items: center;
-//     }
-
-//     .command-container:last-child {
-//       margin-bottom: 0px;
-//     }
-
-//     .command-label {
-//       margin-right: 7px;
-//       color: rgba(55, 53, 47, 0.6);
-//     }
-
-//     .command-cmd {
-//       color: rgb(175, 175, 175);
-//       font-family: SFMono-Regular, Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
-//       font-size: 90%;
-//       line-height: normal;
-//     }
-
-//     ${
-//   bodyElement.classList.contains('dark')
-//     ? `
-//       .usage-hint {
-//         background: rgb(63, 68, 71);
-//         box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 3px 6px, rgb(15 15 15 / 40%) 0px 9px 24px;
-//       }
-
-//       .command-label {
-//         color: rgba(255, 255, 255, 0.8);
-//       }
-
-//       .command-cmd {
-//         color: rgba(255, 255, 255, 0.9);
-//       }
-//     `
-//     : ''
-// }
-//   `);
-
-//   const usageHintsElement = document.createElement('div');
-//   usageHintsElement.id = USAGE_HINT_CONTAINER_ID;
-//   usageHintsElement.className = 'usage-hint';
-
-//   // Add usage hint buttons
-//   usageHintsElement.appendChild(
-//     createUsageHintButtons(commands, activeWindowID),
-//   );
-//   // Add usage hints label, text & id
-//   commands.forEach((command) => {
-//     usageHintsElement.appendChild(renderChild(command));
-//   });
-
-//   bodyElement.appendChild(usageHintsElement);
-// };
-
 /**
  * Singleton class
  */
 class KeyboardShortcutsModal {
+  static get CMD_SHORTCUT() {
+    return 'cmd-shortcut';
+  }
+
+  static get CMD_SHORTCUT_EDIT() {
+    return 'cmd-shortcut-edit';
+  }
+
+  static get CMD_SHORTCUT_DISPLAY() {
+    return 'cmd-shortcut-display';
+  }
+
+  static get CMD_ACTION() {
+    return 'cmd-action';
+  }
+
   /**
    *
    * @param {HTMLDivElement} modalElement
@@ -828,9 +705,43 @@ class KeyboardShortcutsModal {
 
     .modal-table > .modal-table-heading {
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0px;
+      padding-bottom: 4px;
     }
 
-    .modal-table > .command {
+    .modal-table-heading > .command-header {
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .reset-button {
+      user-select: none;
+      transition: background 20ms ease-in 0s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      border-radius: 3px;
+      height: 28px;
+      padding: 0px 12px;
+      font-size: 14px;
+      line-height: 1.2;
+      border: 1px solid rgba(55, 53, 47, 0.16);
+      margin-top: 8px;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    .reset-button:hover {
+      background: rgb(225, 225, 225);
+    }
+
+    .modal-table > .${KeyboardShortcutsModal.CMD_SHORTCUT} {
       position: relative;
       color: rgb(136 136 136);;
       font-family: SFMono-Regular, Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
@@ -841,15 +752,15 @@ class KeyboardShortcutsModal {
     }
 
     
-    .modal-table > .command > .edit-command {
+    .modal-table > .${KeyboardShortcutsModal.CMD_SHORTCUT} > .${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT} {
       opacity: 0;
     }
     
-    .modal-table > .command:nth-child(4) > .edit-command {
+    .modal-table > .${KeyboardShortcutsModal.CMD_SHORTCUT}:nth-child(4) > .${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT} {
       opacity: 1;
     }
 
-    .modal-table > .command:hover > .edit-command {
+    .modal-table > .${KeyboardShortcutsModal.CMD_SHORTCUT}:hover > .${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT} {
       opacity: 1;
     }
 
@@ -858,6 +769,7 @@ class KeyboardShortcutsModal {
       padding: 12px;
       text-align: left;
     }
+
   `);
 
     const modalElement = htmlStringToElement(`
@@ -868,8 +780,13 @@ class KeyboardShortcutsModal {
           <div class="modal-content">
             <h3 class="modal-heading">Edit shortcuts</h3>
             <div class="modal-table">
-              <div class="modal-table-heading">Command</div>
-              <div class="modal-table-heading">Keyboard Shortcut</div>
+              <div class="modal-table-heading">
+                <div class="command-header">Command</div>
+              </div>
+              <div class="modal-table-heading">
+                <div>Keyboard Shortcut</div>
+                <div class="reset-button">Reset</div>
+              </div>
             </div>
           </div>
         </div>
@@ -930,24 +847,51 @@ class KeyboardShortcutsModal {
   }
 
   /**
+   * Reset commands to default commands
+   *
+   * @param {Command[]} oldCommands
+   * @param {number} activeWindowID
+   */
+  resetCommands(oldCommands, activeWindowID) {
+    commandsTrap.pause();
+
+    oldCommands.forEach((oldCommand) => {
+      commandsTrap.unbind(oldCommand.cmd);
+    });
+    const defaultCommands = constructCommandsList(defaultCommandsJson);
+    defaultCommands.forEach((command) => {
+      commandsTrap.update(command, activeWindowID);
+    });
+    updateCommandsStorage(defaultCommands);
+    usageHint.update(defaultCommands);
+
+    // Remove old rows and render new ones
+    removeElementsByClassFromParent(this.modalElement, KeyboardShortcutsModal.CMD_ACTION);
+    removeElementsByClassFromParent(this.modalElement, KeyboardShortcutsModal.CMD_SHORTCUT);
+    this.renderCommands(defaultCommands, activeWindowID);
+
+    commandsTrap.unpause();
+  }
+
+  /**
+   * Renders commands in table
    *
    * @param {Command[]} commands
    * @param {number} activeWindowID
    */
-  show(commands, activeWindowID) {
-    MicroModal.init();
+  renderCommands(commands, activeWindowID) {
     commands.forEach((command) => {
       const cmdElement = htmlStringToElement(`
-        <div class="command">
-          <span class="display-command">${command.getDisplayedCmd()}</span>
-          <span class="edit-command">(Click to edit)</span>
+        <div class="${KeyboardShortcutsModal.CMD_SHORTCUT}">
+          <span class="${KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY}">${command.getDisplayedCmd()}</span>
+          <span class="${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT}">(Click to edit)</span>
         </div>
       `);
 
       cmdElement.onclick = () => {
         KeyboardShortcutsModal.recordCommand(
-          cmdElement.querySelector('.display-command'),
-          cmdElement.querySelector('.edit-command'),
+          cmdElement.querySelector(`.${KeyboardShortcutsModal.CMD_SHORTCUT_DISPLAY}`),
+          cmdElement.querySelector(`.${KeyboardShortcutsModal.CMD_SHORTCUT_EDIT}`),
           commands,
           command,
           activeWindowID,
@@ -955,232 +899,31 @@ class KeyboardShortcutsModal {
       };
 
       this.tableElement.appendChild(
-        htmlStringToElement(`<div>${command.label}</div>`),
+        htmlStringToElement(`<div class="${KeyboardShortcutsModal.CMD_ACTION}">${command.label}</div>`),
       );
       this.tableElement.appendChild(cmdElement);
     });
   }
+
+  /**
+   *
+   * @param {Command[]} commands
+   * @param {number} activeWindowID
+   */
+  setup(commands, activeWindowID) {
+    // Initialise micromodal
+    // https://micromodal.vercel.app/
+    // Must be called only after data-micromodal-trigger is set
+    MicroModal.init();
+
+    this.modalElement.querySelector('.reset-button').addEventListener('click', () => {
+      this.resetCommands(commands, activeWindowID);
+    });
+    this.renderCommands(commands, activeWindowID);
+  }
 }
 
 const keyboardShortcutsModal = KeyboardShortcutsModal.init();
-
-// const addKeyboardShorcutsModal = (commands, activeWindowID) => {
-//   addCustomStyles(`
-//     #${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID} {
-//       display: none;
-//       opacity: 0;
-//     }
-
-//     #${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}.is-open {
-//       display: block;
-//       opacity: 1;
-//     }
-
-//     .modal-overlay {
-//       z-index: 999;
-//       width: 100vw;
-//       height: 100vh;
-//       position: fixed;
-//       align-items: center;
-//       justify-content: center;
-//       opacity: 1;
-//       inset: 0px;
-//       background: rgba(15, 15, 15, 0.6);
-//       transform: translateZ(0px);
-//       pointer-events: auto;
-//       transition: opacity 0.2s;
-//     }
-
-//     .modal-container {
-//       position: fixed;
-//       top: 0px;
-//       left: 0px;
-//       display: flex;
-//       align-items: center;
-//       width: 100vw;
-//       height: 100vh;
-//       justify-content: center;
-//       pointer-events: auto;
-//       opacity: 1;
-//       transform: translateZ(0px);
-//     }
-
-//     .modal-box {
-//       position: relative;
-//       z-index: 1;
-//       box-shadow: rgb(15 15 15 / 5%) 0px 0px 0px 1px, rgb(15 15 15 / 10%) 0px 5px 10px, rgb(15 15 15 / 20%) 0px 15px 40px;
-//       border-radius: 3px;
-//       background: white;
-//       margin-bottom: 0px;
-//       width: 960px;
-//       max-width: calc(100vw - 100px);
-//       height: calc(100vh - 100px);
-//       overflow: hidden;
-//       display: flex;
-//       align-items: center;
-//       flex-direction: column;
-//       max-height: 695px;
-//     }
-
-//     .modal-content {
-//       display: flex;
-//       justify-content: center;
-//       align-items: center;
-//       flex-direction: column;
-//       height: 94%;
-//       width: 500px;
-//     }
-
-//     .modal-heading {
-//       width: 100%;
-//     }
-
-//     .modal-table {
-//       display: grid;
-//       grid-template-columns: 1fr 1.7fr;
-//       width: 100%;
-//       border: 1px solid rgb(233, 233, 231);
-//       grid-gap: 1px;
-//       font-size: 14px;
-//       background-color: rgb(233, 233, 231);
-//     }
-
-//     .modal-table > .modal-table-heading {
-//       font-weight: 600;
-//     }
-
-//     .modal-table > .command {
-//       position: relative;
-//       color: rgb(136 136 136);;
-//       font-family: SFMono-Regular, Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace;
-//       font-size: 90%;
-//       cursor: pointer;
-//       display: inline-flex;
-//       justify-content: space-between;
-//     }
-
-//     .modal-table > .command > .edit-command {
-//       opacity: 0;
-//     }
-
-//     .modal-table > .command:nth-child(4) > .edit-command {
-//       opacity: 1;
-//     }
-
-//     .modal-table > .command:hover > .edit-command {
-//       opacity: 1;
-//     }
-
-//     .modal-table > div {
-//       background-color: white;
-//       padding: 12px;
-//       text-align: left;
-//     }
-//   `);
-
-//   const modalElement = htmlStringToElement(`
-//   <div id="${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}" aria-hidden="true">
-//     <div class="modal-overlay" tabindex="-1" data-micromodal-close="${EDIT_KEYBOARD_SHORTCUTS_MODAL_ID}">
-//       <div class="modal-container" aria-modal="true" >
-//         <div class="modal-box">
-//           <div class="modal-content">
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   </div>
-//   `);
-
-//   const tableElement = document.createElement('div');
-//   tableElement.className = 'modal-table';
-
-//   tableElement.appendChild(
-//     htmlStringToElement(`
-//     <div class="modal-table-heading">Command</div>
-//   `),
-//   );
-//   tableElement.appendChild(
-//     htmlStringToElement(`
-//     <div class="modal-table-heading">Keyboard Shortcut</div>
-//   `),
-//   );
-
-//   const resetCommands = () => {
-//     commandsTrap.pause();
-//     defaultCommands.forEach((command) => {
-//       commandsTrap.update(command, activeWindowID);
-//       // Update all the text
-//     });
-//     updateCommandsStorage(defaultCommands);
-//     usageHint.update(defaultCommands);
-//     commandsTrap.unpause();
-//   };
-
-//   commands.forEach(
-//     /**
-//      *
-//      * @param {Command} command
-//      */
-//     (command) => {
-//       const actionElement = document.createElement('div');
-//       actionElement.textContent = command.label;
-//       const cmdElement = document.createElement('div');
-//       cmdElement.className = 'command';
-//       const displayedCmd = htmlStringToElement(
-//         `<span>${command.getDisplayedCmd()}</span>`,
-//       );
-//       cmdElement.appendChild(displayedCmd);
-
-//       const editHint = htmlStringToElement(
-//         '<span class="edit-command">(Click to edit)</span>',
-//       );
-//       cmdElement.appendChild(editHint);
-//       cmdElement.onclick = () => {
-//         // Records commnd
-//         const recorderTrap = new Mousetrap(document.documentElement);
-//         // Pause commands trap to prevent conflict
-//         commandsTrap.pause();
-//         // Remove old binding
-//         commandsTrap.unbind(command.cmd);
-
-//         // Hide edit hint
-//         editHint.style.visibility = 'hidden';
-//         displayedCmd.textContent = 'Type your command';
-
-//         // Start recording
-//         recorderTrap.record((sequence) => {
-//           // Update command
-//           command.setCmd(sequence[0]);
-//           displayedCmd.textContent = command.getDisplayedCmd();
-//           editHint.style.visibility = 'visible';
-
-//           // Update commands trap
-//           commandsTrap.update(command, activeWindowID);
-//           // Update local storage
-//           updateCommandsStorage(commands);
-//           // Update usage hint
-//           usageHint.update(commands);
-
-//           // Unpause commands trap
-//           commandsTrap.unpause();
-//         });
-//       };
-
-//       tableElement.appendChild(actionElement);
-//       tableElement.appendChild(cmdElement);
-//     },
-//   );
-
-//   modalElement
-//     .querySelector('.modal-content')
-//     .appendChild(
-//       htmlStringToElement('<h3 class="modal-heading">Edit shortcuts</h3>'),
-//     );
-//   modalElement.querySelector('.modal-content').appendChild(tableElement);
-
-//   getBodyElement().appendChild(modalElement);
-//   MicroModal.init();
-// };
 
 const addListener = async () => {
   try {
@@ -1192,7 +935,7 @@ const addListener = async () => {
 
     handleKeyDown(commands, activeWindowID);
     usageHint.show(commands, activeWindowID);
-    keyboardShortcutsModal.show(commands, activeWindowID);
+    keyboardShortcutsModal.setup(commands, activeWindowID);
     if (!hasShownTutorial) {
       tutorial.show(commands, activeWindowID);
       await setLocalStorageData({ hasShownTutorial: true });

@@ -59,7 +59,7 @@ const cmdKey = isMac ? 'cmd' : 'ctrl';
  * and command+s will trigger save on Mac whereas with the mod helper only
  * command+s will.
  */
-const defaultCommands = [
+const defaultCommandsJson = [
   {
     action: CAPTURE,
     cmd: 'mod+shift+,',
