@@ -1,5 +1,11 @@
 # SideNotion ChangeLog
 
+## v1.4.0
+
+- Feat: Edit keyboard shortcuts
+- Feat: Hide usage hints
+- Fix: Fix dark mode colors
+
 ## v1.3.1
 
 - Fix: Command listener on notion id pages

@@ -197,6 +197,8 @@ const getBodyElement = () => {
   return body;
 };
 
+const isDarkMode = () => getBodyElement().classList.contains('dark');
+
 /**
  *
  * @returns {HTMLVideoElement}
@@ -275,7 +277,11 @@ const isCmdShiftKey = (event, matchCode, matchKey) => (event.metaKey || event.ct
  */
 const flashHighlightElement = (element) => {
   element.style.transition = 'box-shadow 0.2s';
-  element.style.boxShadow = `0 0 0 2px ${NOTION_BLACK}`;
+  if (isDarkMode()) {
+    element.style.boxShadow = '0 0 0 1px white';
+  } else {
+    element.style.boxShadow = `0 0 0 2px ${NOTION_BLACK}`;
+  }
   setTimeout(() => {
     element.style.boxShadow = 'none';
   }, 1000);

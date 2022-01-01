@@ -34,6 +34,11 @@ class Tutorial {
         .introjs-overlay {
           display: none;
         }
+
+        ${isDarkMode() ? `
+          .introjs-helperLayer {
+            box-shadow: rgb(255 255 255 / 80%) 0px 0px 1px 2px, rgb(255 255 255 / 0%) 0px 0px 0px 5000px !important;
+          }` : ''}
       `,
     );
 
@@ -178,7 +183,7 @@ class Tutorial {
       {
         element: document.getElementById(TUTORIAL_BUTTON_ID),
         intro:
-          "That's all 🎉. If you need to go through the tutorial again, just click the tutorial button",
+          'That\'s all 🎉. If you need to go through the tutorial again, just click "Tutorial"',
         onchange: () => {
           chromeSendRuntimeMessage({
             action: DISABLE_CAPTURE_AREA,
@@ -444,7 +449,6 @@ class UsageHint {
   }
 
   static init() {
-    const bodyElement = getBodyElement();
     addCustomStyles(`
   .usage-hint {
     position: absolute;
@@ -579,12 +583,47 @@ class UsageHint {
   }
 
   ${
-  bodyElement.classList.contains('dark')
+  isDarkMode()
     ? `
     .usage-hint {
+      color: white;
       background: rgb(63, 68, 71);
       box-shadow: rgb(15 15 15 / 10%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 3px 6px, rgb(15 15 15 / 40%) 0px 9px 24px;
     }
+
+    .usage-hint > .close-button {
+      background: rgb(80, 85, 88);
+      border-color: white;
+    }
+
+    .usage-hint > .close-button:hover {
+      background: rgb(98, 102, 104);
+    }
+  
+    .usage-hint > .close-button > svg {
+      fill: white;
+    }
+
+    .usage-hint__button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .show-usage-hint-button {
+      background: rgb(80, 85, 88);
+      box-shadow: rgb(15 15 15 / 20%) 0px 0px 0px 1px, rgb(15 15 15 / 20%) 0px 2px 4px;
+    }
+
+    .show-usage-hint-button:hover {
+      background: rgb(98, 102, 104);
+    }
+  
+    .show-usage-hint-button > svg {
+      fill: white;
+    }
+    
+     #tutorial-button-icon {
+       fill: white;
+     }
 
     .command-label {
       color: rgba(255, 255, 255, 0.8);
