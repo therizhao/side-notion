@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-const NOTION_URL = 'https://www.notion.so';
+const NOTION_URL = 'https://www.notion.com';
 
 const TAKE_SCREEN_SHOT = 'TAKE_SCREEN_SHOT';
 const GET_VIDEO_POSITION_DATA = 'GET_VIDEO_POSITION_DATA';
