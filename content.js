@@ -263,7 +263,7 @@ const copyBlobToClipboard = (blob) => {
   return navigator.clipboard.write([clipboardItem]);
 };
 
-const getNotionScroller = () => document.querySelector('div.notion-scroller.vertical.horizontal');
+const getNotionScroller = () => document.querySelector('div.notion-scroller.vertical');
 
 const getNotionScrollHeight = () => getNotionScroller().scrollTop;
 
